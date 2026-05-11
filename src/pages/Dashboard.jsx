@@ -21,14 +21,24 @@ export default function Dashboard() {
   const reviews = getReviewAnalytics(data.reviews);
   const actionPlan = generateOverallActionPlan(data);
 
+
   return (
     <div className="page-stack">
       <section className="metrics-grid">
         <MetricCard icon={TrendingUp} label="Weekly Gross Profit" value={currency(menu.weeklyGrossProfit)} help="from seeded menu sales" />
+
+        <Link to="/dashboard/menu">
         <MetricCard icon={BarChart3} label="Menu Items Needing Action" value={menu.actionCount} tone={menu.actionCount ? 'warning' : 'good'} />
+        </Link>
+        <Link to="/dashboard/compliance">
         <MetricCard icon={ClipboardCheck} label="Overdue Compliance" value={compliance.overdue} tone={compliance.overdue ? 'danger' : 'good'} />
+        </Link>
+        <Link to="/dashboard/suppliers">
         <MetricCard icon={Truck} label="Supplier Savings" value={suppliers.length} help="same-unit opportunities" />
+        </Link>
+        <Link to="/dashboard/reputation">
         <MetricCard icon={Star} label="Average Rating" value={reviews.averageRating.toFixed(1)} help={`${reviews.total} mock reviews`} />
+        </Link>
       </section>
 
       <Card className="action-card">
