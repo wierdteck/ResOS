@@ -9,6 +9,7 @@ const MAX_COLLECTION_ROWS = {
   supplierItems: 1000,
   supplierPriceHistory: 5000,
   reviews: 5000,
+  safetyTasks: 1000,
 };
 
 const TOP_LEVEL_KEYS = [
@@ -20,6 +21,7 @@ const TOP_LEVEL_KEYS = [
   'supplierPriceHistory',
   'reviews',
   'businessProfiles',
+  'safetyTasks',
 ];
 
 const PROFILE_KEYS = ['restaurantName', 'address', 'phone', 'cuisine', 'ownerName', 'weeklySalesGoal'];
@@ -30,6 +32,7 @@ const COMPLIANCE_KEYS = ['id', 'title', 'category', 'owner', 'dueDate', 'recurre
 const SUPPLIER_KEYS = ['id', 'supplierName', 'ingredientName', 'price', 'unit', 'lastUpdated', 'reliabilityScore', 'deliveryDays', 'notes'];
 const HISTORY_KEYS = ['id', 'supplierItemId', 'supplierName', 'ingredientName', 'price', 'unit', 'updatedAt', 'note'];
 const REVIEW_KEYS = ['id', 'platform', 'rating', 'date', 'text', 'category', 'urgency', 'replied', 'replyDraft'];
+const SAFETY_KEYS = ['id', 'title', 'area', 'frequency', 'assignedTo', 'lastCompleted', 'nextDue', 'status', 'requiresTemperatureLog', 'temperatureType', 'temperatureValue', 'notes', 'completedAt'];
 
 const UNITS = ['lb', 'oz', 'gal', 'qt', 'pt', 'fl oz', 'each', 'case', 'dozen', 'bag', 'box'];
 const COST_MODES = ['manual', 'recipe'];
@@ -39,6 +42,7 @@ const COMPLIANCE_STATUSES = ['scheduled', 'due_soon', 'overdue', 'compliant'];
 const RISK_LEVELS = ['low', 'medium', 'high'];
 const TEMPERATURE_TYPES = ['fridge', 'freezer', 'hot_holding', ''];
 const URGENCY_LEVELS = ['low', 'medium', 'high'];
+const SAFETY_STATUSES = ['due_today', 'done', 'overdue'];
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,96}$/;
 const PLATFORM_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/;
@@ -90,6 +94,7 @@ function validateResosData(data) {
     supplierItems: parseArray(value.supplierItems, 'supplierItems', MAX_COLLECTION_ROWS.supplierItems, parseSupplierItem),
     supplierPriceHistory: parseArray(value.supplierPriceHistory, 'supplierPriceHistory', MAX_COLLECTION_ROWS.supplierPriceHistory, parseSupplierPriceHistory),
     reviews: parseArray(value.reviews, 'reviews', MAX_COLLECTION_ROWS.reviews, parseReview),
+    safetyTasks: parseArray(value.safetyTasks, 'safetyTasks', MAX_COLLECTION_ROWS.safetyTasks, parseSafetyTask),
     businessProfiles: parseBusinessProfiles(value.businessProfiles),
   };
 }
@@ -239,6 +244,35 @@ function parseReview(input, index) {
     replied: parseBoolean(value.replied, `reviews[${index}].replied`),
     ...(value.replyDraft === undefined ? {} : { replyDraft: parseString(value.replyDraft, `reviews[${index}].replyDraft`, { max: 1200 }) }),
   };
+}
+
+function parseSafetyTask(input, index) {
+  const value = requireObject(input, `safetyTasks[${index}]`);
+  rejectUnknownKeys(value, SAFETY_KEYS, `safetyTasks[${index}]`);
+
+  const parsed = {
+    id: parseId(value.id, `safetyTasks[${index}].id`),
+    title: parseString(value.title, `safetyTasks[${index}].title`, { min: 1, max: 160 }),
+    area: parseString(value.area, `safetyTasks[${index}].area`, { max: 80 }),
+    frequency: parseString(value.frequency, `safetyTasks[${index}].frequency`, { max: 40 }),
+    assignedTo: parseString(value.assignedTo, `safetyTasks[${index}].assignedTo`, { max: 80 }),
+    lastCompleted: parseDate(value.lastCompleted, `safetyTasks[${index}].lastCompleted`),
+    nextDue: parseDate(value.nextDue, `safetyTasks[${index}].nextDue`),
+    status: parseEnum(value.status, SAFETY_STATUSES, `safetyTasks[${index}].status`),
+    requiresTemperatureLog: parseBoolean(value.requiresTemperatureLog, `safetyTasks[${index}].requiresTemperatureLog`),
+    temperatureType: parseString(value.temperatureType, `safetyTasks[${index}].temperatureType`, { max: 40 }),
+    notes: parseString(value.notes, `safetyTasks[${index}].notes`, { max: 500 }),
+  };
+
+  if (value.temperatureValue !== undefined && value.temperatureValue !== null) {
+    parsed.temperatureValue = parseNumber(value.temperatureValue, `safetyTasks[${index}].temperatureValue`, { min: -100, max: 250 });
+  }
+
+  if (value.completedAt !== undefined && value.completedAt !== null) {
+    parsed.completedAt = parseDate(value.completedAt, `safetyTasks[${index}].completedAt`, true);
+  }
+
+  return parsed;
 }
 
 function parseArray(value, field, maxRows, parser) {
