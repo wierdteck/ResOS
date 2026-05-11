@@ -121,7 +121,7 @@ export default function Menu() {
           <Button icon={Sparkles} onClick={() => setSummary(analyzeMenu(items, recipes, supplierItems))}>Analyze Menu</Button>
         </div>
       </div>
-      <p className="muted">Recommendations are computed from effective ingredient cost. Manual dishes use typed cost; auto-costed dishes follow matching supplier prices.</p>
+      <p className="muted"> Manual cost have to be typed in while auto-costed dishes are calculated from supplier pricing. Further customization is in the recipe cost builder section. Recommendations are computed are based on a combination of profit, food cost, prep time, and sales number.</p>
       {summary ? <Card className="insight">{summary}</Card> : null}
 
       <Card>
@@ -278,12 +278,7 @@ function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onUp
           </tbody>
         </table>
       </div>
-      <div className="recipe-summary">
-        <div><span>Computed ingredient cost</span><strong>{currency(recipeCost.total)}</strong></div>
-        <div><span>Manual comparison</span><strong>{currency(menuItem.ingredientCost)}</strong></div>
-        <div><span>Estimated gross profit</span><strong>{currency((analyticsRow?.price || 0) - recipeCost.total)}</strong></div>
-        <div><span>Food cost margin</span><strong>{percent((analyticsRow?.price || 0) ? recipeCost.total / analyticsRow.price : 0)}</strong></div>
-      </div>
+      
       {recipeCost.incomplete ? <p className="muted warning-text">One or more recipe rows are excluded from the total until a matching supplier and unit are available.</p> : null}
     </Card>
   );
