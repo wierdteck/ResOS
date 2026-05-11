@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { CheckCircle2, Sparkles } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
@@ -6,26 +6,20 @@ import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import MetricCard from '../components/MetricCard.jsx';
 import NumericInput from '../components/NumericInput.jsx';
-import { useResosData } from '../services/ResosDataProvider.jsx';
+import { getSafetyTasks, saveSafetyTasks } from '../services/dataStore.js';
 import { chartRowsFromCounts, countBy, getSafetyAnalytics, isUnsafeTemperature } from '../utils/analytics.js';
 import { generateSafetyPlan } from '../utils/mockAi.js';
 
 const statusOptions = ['done', 'due_today', 'overdue'];
 
 export default function Safety() {
-  const { data, saveCollection } = useResosData();
-  const [tasks, setTasks] = useState(data.safetyTasks);
+  const [tasks, setTasks] = useState(getSafetyTasks());
   const [plan, setPlan] = useState('');
   const analytics = getSafetyAnalytics(tasks);
   const todayTasks = tasks.filter((task) => task.status === 'due_today' || task.status === 'overdue');
 
-  useEffect(() => {
-    setTasks(data.safetyTasks);
-  }, [data.safetyTasks]);
-
   function save(next) {
-    setTasks(next);
-    void saveCollection('safetyTasks', next).catch(() => {});
+    setTasks(saveSafetyTasks(next));
   }
 
   function update(id, key, value) {
@@ -40,7 +34,7 @@ export default function Safety() {
   return (
     <div className="page-stack">
       <div className="section-heading">
-        <div><p className="eyebrow">Cleanliness & Food Safety</p><h2>Today's checklist</h2></div>
+        <div><p className="eyebrow">Cleanliness & Food Safety</p><h2>Today’s checklist</h2></div>
         <Button icon={Sparkles} onClick={() => setPlan(generateSafetyPlan(tasks))}>Generate Safety Plan</Button>
       </div>
       <section className="metrics-grid small">
@@ -51,7 +45,7 @@ export default function Safety() {
       </section>
       {plan ? <Card className="insight">{plan}</Card> : null}
       <Card>
-        <h3>Today's checklist</h3>
+        <h3>Today’s checklist</h3>
         <div className="checklist">
           {todayTasks.map((task) => (
             <button key={task.id} className="check-row" type="button" onClick={() => markDone(task.id)}>
@@ -78,7 +72,7 @@ export default function Safety() {
                   <label>Assigned To<input value={task.assignedTo} onChange={(event) => update(task.id, 'assignedTo', event.target.value)} /></label>
                   <label>Status<select value={task.status} onChange={(event) => update(task.id, 'status', event.target.value)}>{statusOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
                   <label>Next Due<input type="date" value={task.nextDue} onChange={(event) => update(task.id, 'nextDue', event.target.value)} /></label>
-                  <label>Temp F<NumericInput disabled={!task.requiresTemperatureLog} value={task.temperatureValue ?? 0} onCommit={(value) => update(task.id, 'temperatureValue', value)} /></label>
+                  <label>Temp F<NumericInput disabled={!task.requiresTemperatureLog} value={task.temperatureValue ?? 0} step="0.1" decimals={1} onCommit={(value) => update(task.id, 'temperatureValue', value)} /></label>
                   <label>Notes<input value={task.notes} onChange={(event) => update(task.id, 'notes', event.target.value)} /></label>
                 </div>
                 <Button variant="ghost" icon={CheckCircle2} onClick={() => markDone(task.id)}>Mark Done</Button>
