@@ -54,18 +54,6 @@ export const initialData = {
     { id: 'hist-5', supplierItemId: 'sup-7', supplierName: 'Sunrise Dairy', ingredientName: 'milk', price: 4.15, unit: 'gal', updatedAt: '2026-05-01', note: 'Start of month.' },
     { id: 'hist-6', supplierItemId: 'sup-7', supplierName: 'Sunrise Dairy', ingredientName: 'milk', price: 4.25, unit: 'gal', updatedAt: '2026-05-09', note: 'Updated dairy quote.' },
   ],
-  safetyTasks: [
-    { id: 'safe-1', title: 'Fridge temperature check', area: 'Kitchen', frequency: 'daily', assignedTo: 'Ana', lastCompleted: '2026-05-09', nextDue: '2026-05-10', status: 'due_today', requiresTemperatureLog: true, temperatureType: 'fridge', temperatureValue: 42, notes: 'Line fridge running warm.' },
-    { id: 'safe-2', title: 'Freezer temperature check', area: 'Storage', frequency: 'daily', assignedTo: 'Ben', lastCompleted: '2026-05-10', nextDue: '2026-05-10', status: 'done', requiresTemperatureLog: true, temperatureType: 'freezer', temperatureValue: -3, notes: 'Stable.' },
-    { id: 'safe-3', title: 'Sanitize prep surfaces', area: 'Kitchen', frequency: 'daily', assignedTo: 'Ana', lastCompleted: '2026-05-09', nextDue: '2026-05-10', status: 'due_today', requiresTemperatureLog: false, temperatureType: '', notes: 'Do before dinner prep.' },
-    { id: 'safe-4', title: 'Clean fryer', area: 'Equipment', frequency: 'weekly', assignedTo: 'Luis', lastCompleted: '2026-05-01', nextDue: '2026-05-08', status: 'overdue', requiresTemperatureLog: false, temperatureType: '', notes: 'Oil changed, exterior still needs clean.' },
-    { id: 'safe-5', title: 'Mop kitchen floor', area: 'Kitchen', frequency: 'daily', assignedTo: 'Ben', lastCompleted: '2026-05-09', nextDue: '2026-05-10', status: 'due_today', requiresTemperatureLog: false, temperatureType: '', notes: 'Use degreaser near grill.' },
-    { id: 'safe-6', title: 'Check sanitizer concentration', area: 'Dining Room', frequency: 'daily', assignedTo: 'Rae', lastCompleted: '2026-05-10', nextDue: '2026-05-10', status: 'done', requiresTemperatureLog: false, temperatureType: '', notes: 'Test strips in server station.' },
-    { id: 'safe-7', title: 'Label/date stored food', area: 'Storage', frequency: 'daily', assignedTo: 'Ana', lastCompleted: '2026-05-08', nextDue: '2026-05-09', status: 'overdue', requiresTemperatureLog: false, temperatureType: '', notes: 'Check sauces and prepped romaine.' },
-    { id: 'safe-8', title: 'Clean bathroom', area: 'Bathroom', frequency: 'daily', assignedTo: 'Rae', lastCompleted: '2026-05-10', nextDue: '2026-05-10', status: 'done', requiresTemperatureLog: false, temperatureType: '', notes: 'Restock paper towels.' },
-    { id: 'safe-9', title: 'Empty grease bin', area: 'Equipment', frequency: 'weekly', assignedTo: 'Luis', lastCompleted: '2026-05-02', nextDue: '2026-05-09', status: 'overdue', requiresTemperatureLog: false, temperatureType: '', notes: 'Before lunch rush.' },
-    { id: 'safe-10', title: 'Inspect dry storage', area: 'Storage', frequency: 'weekly', assignedTo: 'Maya', lastCompleted: '2026-05-05', nextDue: '2026-05-12', status: 'done', requiresTemperatureLog: false, temperatureType: '', notes: 'Rotate flour and coffee beans.' },
-  ],
   reviews: [
     { id: 'rev-1', platform: 'Google', rating: 5, date: '2026-05-08', text: 'The smash burger was perfect and the staff were kind even during the rush.', category: 'food_quality', urgency: 'low', replied: true, replyDraft: 'Thank you for the kind words. We are thrilled the burger hit the spot.' },
     { id: 'rev-2', platform: 'Yelp', rating: 3, date: '2026-05-06', text: 'Food was good but our table waited almost 25 minutes for drinks.', category: 'wait_time', urgency: 'medium', replied: false },
