@@ -53,17 +53,7 @@ export default function Dashboard() {
         </ol>
       </Card>
 
-      <section className="nav-card-grid">
-        {cards.map((card) => (
-          <Link to={card.to} className="nav-card" key={card.to}>
-            <card.icon size={22} />
-            <div>
-              <strong>{card.label}</strong>
-              <span>{card.text}</span>
-            </div>
-          </Link>
-        ))}
-      </section>
+     
     </div>
   );
 }
