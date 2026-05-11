@@ -7,7 +7,7 @@ import Card from '../components/Card.jsx';
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { hasSupabaseConfig, isAuthenticated, isLoading, signUp } = useAuth();
+  const { hasSupabaseConfig, isAuthenticated, isLoading, signIn, signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -65,9 +65,8 @@ export default function Signup() {
         navigate('/dashboard', { replace: true });
         return;
       }
-      setStatus({ type: 'success', message: 'Account created. Check your email to confirm your address.' });
-      setPassword('');
-      setConfirmPassword('');
+      await signIn(email, password);
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       setStatus({ type: 'error', message: publicAuthError(error) });
     } finally {
