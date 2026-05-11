@@ -11,7 +11,7 @@ export const initialData = {
     { id: 'menu-1', name: 'Smash Burger', category: 'Entree', price: 15.5, ingredientCost: 5.2, costMode: 'recipe', avgPrepMinutes: 9, salesThisWeek: 92, station: 'Grill', notes: 'Best lunch mover, watch beef costs.' },
     { id: 'menu-2', name: 'Chicken Caesar Salad', category: 'Salad', price: 14, ingredientCost: 4.9, costMode: 'recipe', avgPrepMinutes: 7, salesThisWeek: 68, station: 'Cold Line', notes: 'Reliable margin, strong weekday lunch.' },
     { id: 'menu-3', name: 'Truffle Fries', category: 'Side', price: 9, ingredientCost: 1.85, costMode: 'recipe', avgPrepMinutes: 6, salesThisWeek: 41, station: 'Fryer', notes: 'High margin, could bundle with burgers.' },
-    { id: 'menu-4', name: 'Iced Lavender Latte', category: 'Beverage', price: 6.75, ingredientCost: 1.15, costMode: 'manual', avgPrepMinutes: 4, salesThisWeek: 38, station: 'Barista', notes: 'Promote on warm afternoons.' },
+    { id: 'menu-4', name: 'Iced Lavender Latte', category: 'Beverage', price: 6.75, ingredientCost: 1.15, costMode: 'recipe', avgPrepMinutes: 4, salesThisWeek: 38, station: 'Barista', notes: 'Promote on warm afternoons.' },
     { id: 'menu-5', name: 'Salmon Rice Bowl', category: 'Entree', price: 18.5, ingredientCost: 8.25, costMode: 'recipe', avgPrepMinutes: 13, salesThisWeek: 28, station: 'Saute', notes: 'Good reviews but slow prep and variable salmon cost.' },
   ],
   recipeIngredients: [

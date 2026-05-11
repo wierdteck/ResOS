@@ -1,21 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Plus, Sparkles, Trash2 } from 'lucide-react';
-import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import NumericInput from '../components/NumericInput.jsx';
 import { getMenuItems, getRecipeIngredients, getSupplierItems, saveMenuItems, saveRecipeIngredients } from '../services/dataStore.js';
-import { analyzeMenu } from '../utils/mockAi.js';
-import { currency, getMenuAnalytics, getRecipeCost, percent } from '../utils/analytics.js';
+import { analyzeMenuWithGemini } from '../services/geminiApi.js';
+import { currency, getMenuAnalytics, getRecipeCost } from '../utils/analytics.js';
 
 const units = ['lb', 'oz', 'gal', 'qt', 'pt', 'fl oz', 'each', 'case', 'dozen', 'bag', 'box'];
-const toneByRecommendation = {
-  Keep: 'good',
-  Promote: 'info',
-  Reprice: 'warning',
-  'Simplify/Remove': 'danger',
-};
 
 export default function Menu() {
   const [items, setItems] = useState(getMenuItems());
@@ -23,6 +16,7 @@ export default function Menu() {
   const [supplierItems] = useState(getSupplierItems());
   const [selectedId, setSelectedId] = useState(items[0]?.id || '');
   const [summary, setSummary] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const analytics = getMenuAnalytics(items, recipes, supplierItems);
   const selectedItem = items.find((item) => item.id === selectedId) || items[0];
   const selectedAnalytics = analytics.rows.find((item) => item.id === selectedItem?.id);
@@ -46,11 +40,13 @@ export default function Menu() {
       category: 'Entree',
       price: 0,
       ingredientCost: 0,
-      costMode: 'manual',
+      costMode: 'recipe',
       avgPrepMinutes: 0,
       salesThisWeek: 0,
       station: 'Kitchen',
       notes: '',
+      lastManualUpdate: 0,
+      lastAutoUpdate: Date.now(),
     };
     saveItems([...items, item]);
     setSelectedId(item.id);
@@ -80,6 +76,7 @@ export default function Menu() {
         notes: '',
       },
     ]);
+    updateItem(selectedItem.id, 'lastAutoUpdate', Date.now());
   }
 
   function updateRecipe(id, key, value) {
@@ -96,10 +93,30 @@ export default function Menu() {
       }
       return next;
     }));
+    // Update lastAutoUpdate for the menu item
+    const recipeRow = recipes.find((row) => row.id === id);
+    if (recipeRow) {
+      updateItem(recipeRow.menuItemId, 'lastAutoUpdate', Date.now());
+    }
   }
 
   function removeRecipe(id) {
+    const recipeRow = recipes.find((row) => row.id === id);
     saveRecipes(recipes.filter((row) => row.id !== id));
+    if (recipeRow) {
+      updateItem(recipeRow.menuItemId, 'lastAutoUpdate', Date.now());
+    }
+  }
+
+  async function analyzeMenu() {
+    setIsAnalyzing(true);
+    try {
+      setSummary(await analyzeMenuWithGemini(items, analytics.rows, recipes, supplierItems));
+    } catch (error) {
+      setSummary(error.message || 'Menu analysis failed.');
+    } finally {
+      setIsAnalyzing(false);
+    }
   }
 
   return (
@@ -108,10 +125,10 @@ export default function Menu() {
         <div><p className="eyebrow">Menu Intelligence</p><h2>Profit and recipe-linked costing</h2></div>
         <div className="button-row">
           <Button variant="secondary" icon={Plus} onClick={addMenuItem}>Add Menu Item</Button>
-          <Button icon={Sparkles} onClick={() => setSummary(analyzeMenu(items, recipes, supplierItems))}>Analyze Menu</Button>
+          <Button icon={Sparkles} onClick={analyzeMenu}>{isAnalyzing ? 'Analyzing...' : 'Analyze Menu'}</Button>
         </div>
       </div>
-      <p className="muted"> Manual cost have to be typed in while auto-costed dishes are calculated from supplier pricing. Further customization is in the recipe cost builder section. Recommendations are computed are based on a combination of profit, food cost, prep time, and sales number.</p>
+      <p className="muted">Auto-costed dishes are calculated from supplier pricing.</p>
       {summary ? <Card className="insight">{summary}</Card> : null}
 
       <Card>
@@ -119,35 +136,19 @@ export default function Menu() {
           <table>
             <thead>
               <tr>
-                <th>Dish</th><th>Category</th><th>Cost Mode</th><th>Price</th><th>Ingredient Cost</th><th>Prep</th><th>Sales</th><th>Station</th><th>Profit</th><th>Food Cost</th><th>Action</th><th>Notes</th><th></th>
+                <th>Dish</th><th>Price</th><th>Ingredient Cost</th><th>Preparation time</th><th>Sales</th><th>Station</th><th>Profit</th><th></th>
               </tr>
             </thead>
             <tbody>
               {analytics.rows.map((row) => (
                 <tr key={row.id} className={selectedId === row.id ? 'selected-row' : ''} onClick={() => setSelectedId(row.id)}>
                   <td><input value={row.name} onChange={(event) => updateItem(row.id, 'name', event.target.value)} /></td>
-                  <td><input value={row.category} onChange={(event) => updateItem(row.id, 'category', event.target.value)} /></td>
-                  <td>
-                    <select value={row.costMode} onChange={(event) => updateItem(row.id, 'costMode', event.target.value)}>
-                      <option value="manual">Manual Cost</option>
-                      <option value="recipe">Auto From Recipe/Suppliers</option>
-                    </select>
-                  </td>
-                  <td><NumericInput value={row.price} step="0.01" onCommit={(value) => updateItem(row.id, 'price', value)} /></td>
-                  <td>
-                    {row.costMode === 'recipe' ? (
-                      <span className="derived-value">{currency(row.effectiveIngredientCost)}</span>
-                    ) : (
-                      <NumericInput value={row.ingredientCost} step="0.01" onCommit={(value) => updateItem(row.id, 'ingredientCost', value)} />
-                    )}
-                  </td>
-                  <td><NumericInput value={row.avgPrepMinutes} step="1" onCommit={(value) => updateItem(row.id, 'avgPrepMinutes', value)} /></td>
-                  <td><NumericInput value={row.salesThisWeek} step="1" onCommit={(value) => updateItem(row.id, 'salesThisWeek', value)} /></td>
+                  <td><NumericInput value={row.price} step="0.01" decimals={2} onCommit={(value) => updateItem(row.id, 'price', value)} /></td>
+                  <td><span className="derived-value">{currency(row.effectiveIngredientCost)}</span></td>
+                  <td><NumericInput value={row.avgPrepMinutes} step="1" decimals={0} onCommit={(value) => updateItem(row.id, 'avgPrepMinutes', value)} /> <span className="unit-label">minutes</span></td>
+                  <td><NumericInput value={row.salesThisWeek} step="1" decimals={0} onCommit={(value) => updateItem(row.id, 'salesThisWeek', value)} /> <span className="unit-label">per week</span></td>
                   <td><input value={row.station} onChange={(event) => updateItem(row.id, 'station', event.target.value)} /></td>
                   <td><span className="derived-value">{currency(row.grossProfit)}</span></td>
-                  <td><span className="derived-value">{percent(row.foodCostPercent)}</span></td>
-                  <td><Badge tone={toneByRecommendation[row.recommendation]}>{row.recommendation}</Badge></td>
-                  <td><input value={row.notes} onChange={(event) => updateItem(row.id, 'notes', event.target.value)} /></td>
                   <td>
                     <button
                       className="icon-only danger"
@@ -200,29 +201,6 @@ function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onUp
   const ingredientNames = useMemo(() => [...new Set(supplierItems.map((item) => item.ingredientName))], [supplierItems]);
   const specificSuppliers = (row) => supplierItems.filter((item) => item.ingredientName === row.ingredientName || item.id === row.supplierItemId);
 
-  if (menuItem.costMode === 'manual') {
-    return (
-      <Card className="recipe-builder">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Manual Cost Builder</p>
-            <h2>{menuItem.name}</h2>
-          </div>
-        </div>
-        <p className="muted">This item is using a manually entered ingredient cost, so supplier recipe rows are not required.</p>
-        <div className="manual-cost-panel">
-          <label>
-            Manual ingredient cost
-            <NumericInput value={menuItem.ingredientCost} step="0.01" onCommit={(value) => onUpdateMenuItem(menuItem.id, 'ingredientCost', value)} />
-          </label>
-          <div><span>Price</span><strong>{currency(menuItem.price)}</strong></div>
-          <div><span>Estimated gross profit</span><strong>{currency(analyticsRow?.grossProfit || 0)}</strong></div>
-          <div><span>Food cost margin</span><strong>{percent(analyticsRow?.foodCostPercent || 0)}</strong></div>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <Card className="recipe-builder">
       <div className="section-heading">
@@ -235,9 +213,15 @@ function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onUp
         </div>
       </div>
       <p className="muted">Use Cheapest Supplier to automatically follow the lowest matching supplier price. Use Specific Supplier to lock a recipe to one supplier.</p>
+      <div className="manual-cost-panel">
+        
+        <div><span>Auto recipe cost</span><strong>{currency(recipeCost.total)}</strong></div>
+        <div><span>Estimated gross profit</span><strong>{currency(analyticsRow?.grossProfit || 0)}</strong></div>
+        <div><span>Recommendation</span><strong>{analyticsRow?.recommendation || 'Keep'}</strong></div>
+      </div>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Ingredient</th><th>Quantity</th><th>Unit</th><th>Costing</th><th>Supplier</th><th>Line Cost</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+          <thead><tr><th>Ingredient</th><th>Quantity</th><th>Unit</th><th>Costing</th><th>Supplier</th><th>Line Cost</th><th></th></tr></thead>
           <tbody>
             {recipeCost.rows.map((row) => (
               <tr key={row.id}>
@@ -245,7 +229,7 @@ function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onUp
                   <input list="supplier-ingredients" value={row.ingredientName} onChange={(event) => onUpdate(row.id, 'ingredientName', event.target.value)} />
                   <datalist id="supplier-ingredients">{ingredientNames.map((name) => <option key={name} value={name} />)}</datalist>
                 </td>
-                <td><NumericInput value={row.quantity} step="0.01" onCommit={(value) => onUpdate(row.id, 'quantity', value)} /></td>
+                <td><NumericInput value={row.quantity} step="0.01" decimals={2} onCommit={(value) => onUpdate(row.id, 'quantity', value)} /></td>
                 <td><select value={row.unit} onChange={(event) => onUpdate(row.id, 'unit', event.target.value)}>{units.map((unit) => <option key={unit}>{unit}</option>)}</select></td>
                 <td>
                   <select value={row.costingMode} onChange={(event) => onUpdate(row.id, 'costingMode', event.target.value)}>
@@ -260,8 +244,6 @@ function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onUp
                   </select>
                 </td>
                 <td><span className="derived-value">{currency(row.lineCost)}</span></td>
-                <td>{row.warning ? <Badge tone="warning">{row.warning.includes('unit') ? 'Unit Mismatch' : 'Incomplete Cost'}</Badge> : <Badge tone="good">Matched</Badge>}</td>
-                <td><input value={row.notes || ''} onChange={(event) => onUpdate(row.id, 'notes', event.target.value)} /></td>
                 <td><button className="icon-only danger" type="button" onClick={() => onRemove(row.id)} aria-label="Remove recipe ingredient"><Trash2 size={16} /></button></td>
               </tr>
             ))}

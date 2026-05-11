@@ -60,7 +60,19 @@ export function getRecipeCost(menuItemId, recipeIngredients = [], supplierItems 
 }
 
 export function effectiveIngredientCost(menuItem, recipeIngredients = [], supplierItems = []) {
-  if (menuItem.costMode !== 'recipe') {
+  const lastAuto = menuItem.lastAutoUpdate || 0;
+  const lastManual = menuItem.lastManualUpdate || 0;
+  const useAuto = lastAuto >= lastManual;
+
+  if (useAuto) {
+    const recipe = getRecipeCost(menuItem.id, recipeIngredients, supplierItems);
+    return {
+      cost: recipe.total,
+      incomplete: recipe.incomplete || recipe.rows.length === 0,
+      source: 'recipe',
+      recipeRows: recipe.rows,
+    };
+  } else {
     return {
       cost: safeNumber(menuItem.ingredientCost),
       incomplete: false,
@@ -68,14 +80,6 @@ export function effectiveIngredientCost(menuItem, recipeIngredients = [], suppli
       recipeRows: [],
     };
   }
-
-  const recipe = getRecipeCost(menuItem.id, recipeIngredients, supplierItems);
-  return {
-    cost: recipe.total,
-    incomplete: recipe.incomplete || recipe.rows.length === 0,
-    source: 'recipe',
-    recipeRows: recipe.rows,
-  };
 }
 
 export function getMenuMetrics(item, recipeIngredients = [], supplierItems = []) {

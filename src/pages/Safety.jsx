@@ -72,7 +72,7 @@ export default function Safety() {
                   <label>Assigned To<input value={task.assignedTo} onChange={(event) => update(task.id, 'assignedTo', event.target.value)} /></label>
                   <label>Status<select value={task.status} onChange={(event) => update(task.id, 'status', event.target.value)}>{statusOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
                   <label>Next Due<input type="date" value={task.nextDue} onChange={(event) => update(task.id, 'nextDue', event.target.value)} /></label>
-                  <label>Temp F<NumericInput disabled={!task.requiresTemperatureLog} value={task.temperatureValue ?? 0} onCommit={(value) => update(task.id, 'temperatureValue', value)} /></label>
+                  <label>Temp F<NumericInput disabled={!task.requiresTemperatureLog} value={task.temperatureValue ?? 0} step="0.1" decimals={1} onCommit={(value) => update(task.id, 'temperatureValue', value)} /></label>
                   <label>Notes<input value={task.notes} onChange={(event) => update(task.id, 'notes', event.target.value)} /></label>
                 </div>
                 <Button variant="ghost" icon={CheckCircle2} onClick={() => markDone(task.id)}>Mark Done</Button>

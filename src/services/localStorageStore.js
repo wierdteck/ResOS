@@ -33,7 +33,9 @@ function normalizeData(data) {
       const seededItem = seed.menuItems.find((seedItem) => seedItem.id === item.id);
       return {
         ...item,
-        costMode: item.costMode || seededItem?.costMode || 'manual',
+        costMode: item.costMode || seededItem?.costMode || 'recipe',
+        lastManualUpdate: item.lastManualUpdate || 0,
+        lastAutoUpdate: item.lastAutoUpdate || Date.now(),
       };
     }),
     recipeIngredients: data.recipeIngredients || seed.recipeIngredients || [],
