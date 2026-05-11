@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { BarChart3, ClipboardCheck, Home, Menu as MenuIcon, RefreshCcw, ShieldCheck, Sparkles, Truck } from 'lucide-react';
+import { BarChart3, ClipboardCheck, Home, Menu as MenuIcon, RefreshCcw, Sparkles, Truck } from 'lucide-react';
 import Button from './Button.jsx';
 import { getAllData, resetDemoData } from '../services/dataStore.js';
 
@@ -7,7 +7,6 @@ const navItems = [
   { to: '/dashboard', label: 'Overview', icon: Home, end: true },
   { to: '/dashboard/menu', label: 'Menu', icon: BarChart3 },
   { to: '/dashboard/compliance', label: 'Compliance', icon: ClipboardCheck },
-  { to: '/dashboard/safety', label: 'Safety', icon: ShieldCheck },
   { to: '/dashboard/suppliers', label: 'Suppliers', icon: Truck },
   { to: '/dashboard/reputation', label: 'Reputation', icon: Sparkles },
 ];

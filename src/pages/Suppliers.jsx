@@ -67,7 +67,7 @@ export default function Suppliers() {
             <Card key={row.ingredientName}>
               <div className="task-head">
                 <strong>{row.ingredientName}</strong>
-                {row.unitMismatch ? <Badge tone="warning">unit mismatch; compare manually</Badge> : <Badge tone="good">{row.unit}</Badge>}
+                {row.unitMismatch ? <Badge tone="warning">unit mismatch</Badge> : <Badge tone="good">{row.unit}</Badge>}
               </div>
               {row.unitMismatch ? <p className="muted">Suppliers use different units. Keep this as a manual manager comparison.</p> : (
                 <p><strong>{row.cheapest.supplierName}</strong> is cheapest at {currency(row.cheapest.price)} per {row.unit}. Potential spread: {currency(row.savings)}.</p>

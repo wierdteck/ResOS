@@ -133,13 +133,28 @@ export function getMenuAnalytics(menuItems, recipeIngredients = [], supplierItem
 }
 
 export function getComplianceAnalytics(tasks) {
+  const rows = tasks.map((task) => ({ ...task, derivedStatus: getComplianceDisplayStatus(task) }));
   return {
-    total: tasks.length,
-    overdue: tasks.filter((task) => task.status === 'overdue').length,
-    dueSoon: tasks.filter((task) => task.status === 'due_soon').length,
-    compliant: tasks.filter((task) => task.status === 'compliant').length,
-    highRiskOverdue: tasks.filter((task) => task.status === 'overdue' && task.riskLevel === 'high').length,
+    rows,
+    total: rows.length,
+    overdue: rows.filter((task) => task.derivedStatus === 'overdue').length,
+    dueSoon: rows.filter((task) => task.derivedStatus === 'urgent').length,
+    compliant: rows.filter((task) => task.derivedStatus === 'compliant').length,
+    highRiskOverdue: rows.filter((task) => task.derivedStatus === 'overdue' && task.riskLevel === 'high').length,
   };
+}
+
+export function getComplianceDisplayStatus(task, now = new Date()) {
+  if (task.status === 'compliant' || task.completedAt) return 'compliant';
+  if (!task.dueDate) return 'scheduled';
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const due = new Date(`${task.dueDate}T00:00:00`);
+  const daysUntilDue = Math.ceil((due - today) / 86400000);
+
+  if (daysUntilDue < 0) return 'overdue';
+  if (daysUntilDue <= 7) return 'urgent';
+  return 'scheduled';
 }
 
 export function isUnsafeTemperature(task) {

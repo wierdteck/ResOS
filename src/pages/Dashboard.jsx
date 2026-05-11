@@ -1,15 +1,14 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, ClipboardCheck, ShieldAlert, ShieldCheck, Sparkles, Star, TrendingUp, Truck } from 'lucide-react';
+import { BarChart3, ClipboardCheck, Sparkles, Star, TrendingUp, Truck } from 'lucide-react';
 import Card from '../components/Card.jsx';
 import MetricCard from '../components/MetricCard.jsx';
 import { getAllData } from '../services/dataStore.js';
-import { currency, getComplianceAnalytics, getMenuAnalytics, getReviewAnalytics, getSafetyAnalytics, getSupplierAnalytics } from '../utils/analytics.js';
+import { currency, getComplianceAnalytics, getMenuAnalytics, getReviewAnalytics, getSupplierAnalytics } from '../utils/analytics.js';
 import { generateOverallActionPlan } from '../utils/mockAi.js';
 
 const cards = [
   { to: 'menu', label: 'Menu Intelligence', text: 'Profitability, prep burden, and dish recommendations.', icon: BarChart3 },
   { to: 'compliance', label: 'Compliance', text: 'Permits, inspections, renewals, and risk tracking.', icon: ClipboardCheck },
-  { to: 'safety', label: 'Safety', text: 'Cleaning checklist and temperature rule checks.', icon: ShieldCheck },
   { to: 'suppliers', label: 'Suppliers', text: 'Lightweight price comparison and history.', icon: Truck },
   { to: 'reputation', label: 'Reputation', text: 'Manual review insights and profile consistency.', icon: Sparkles },
 ];
@@ -18,7 +17,6 @@ export default function Dashboard() {
   const data = getAllData();
   const menu = getMenuAnalytics(data.menuItems, data.recipeIngredients, data.supplierItems);
   const compliance = getComplianceAnalytics(data.complianceTasks);
-  const safety = getSafetyAnalytics(data.safetyTasks);
   const suppliers = getSupplierAnalytics(data.supplierItems).filter((row) => !row.unitMismatch && row.savings > 0);
   const reviews = getReviewAnalytics(data.reviews);
   const actionPlan = generateOverallActionPlan(data);
@@ -29,8 +27,6 @@ export default function Dashboard() {
         <MetricCard icon={TrendingUp} label="Weekly Gross Profit" value={currency(menu.weeklyGrossProfit)} help="from seeded menu sales" />
         <MetricCard icon={BarChart3} label="Menu Items Needing Action" value={menu.actionCount} tone={menu.actionCount ? 'warning' : 'good'} />
         <MetricCard icon={ClipboardCheck} label="Overdue Compliance" value={compliance.overdue} tone={compliance.overdue ? 'danger' : 'good'} />
-        <MetricCard icon={ShieldCheck} label="Overdue Safety" value={safety.overdue} tone={safety.overdue ? 'danger' : 'good'} />
-        <MetricCard icon={ShieldAlert} label="Unsafe Temperatures" value={safety.unsafeTemperatures} tone={safety.unsafeTemperatures ? 'danger' : 'good'} />
         <MetricCard icon={Truck} label="Supplier Savings" value={suppliers.length} help="same-unit opportunities" />
         <MetricCard icon={Star} label="Average Rating" value={reviews.averageRating.toFixed(1)} help={`${reviews.total} mock reviews`} />
       </section>

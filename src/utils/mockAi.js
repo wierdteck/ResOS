@@ -1,4 +1,4 @@
-import { getComplianceAnalytics, getMenuAnalytics, getProfileMismatches, getSafetyAnalytics, getSupplierAnalytics, getReviewAnalytics, isUnsafeTemperature, currency } from './analytics.js';
+import { getComplianceAnalytics, getComplianceDisplayStatus, getMenuAnalytics, getProfileMismatches, getSafetyAnalytics, getSupplierAnalytics, getReviewAnalytics, isUnsafeTemperature, currency } from './analytics.js';
 
 function sentenceList(items) {
   return items.filter(Boolean).join(' ');
@@ -25,7 +25,7 @@ export function analyzeMenu(menuItems, recipeIngredients = [], supplierItems = [
 
 export function generateCompliancePlan(tasks) {
   const analytics = getComplianceAnalytics(tasks);
-  const urgent = tasks.filter((task) => task.status === 'overdue' || task.riskLevel === 'high');
+  const urgent = tasks.filter((task) => getComplianceDisplayStatus(task) === 'overdue' || task.riskLevel === 'high');
   return sentenceList([
     `There are ${analytics.overdue} overdue compliance tasks and ${analytics.highRiskOverdue} high-risk overdue tasks.`,
     urgent.length ? `Handle first: ${urgent.map((task) => `${task.title} (${task.owner})`).slice(0, 4).join(', ')}.` : 'No urgent compliance blockers are visible.',
@@ -84,13 +84,11 @@ export function generateProfileUpdatePlan(mismatches) {
 export function generateOverallActionPlan(allData) {
   const menu = getMenuAnalytics(allData.menuItems, allData.recipeIngredients, allData.supplierItems);
   const compliance = getComplianceAnalytics(allData.complianceTasks);
-  const safety = getSafetyAnalytics(allData.safetyTasks);
   const suppliers = getSupplierAnalytics(allData.supplierItems).filter((row) => !row.unitMismatch && row.savings > 0);
   const mismatches = getProfileMismatches(allData.businessProfiles);
 
   return [
     compliance.highRiskOverdue ? `Resolve ${compliance.highRiskOverdue} high-risk overdue compliance task before the next service window.` : 'Compliance has no high-risk overdue blocker.',
-    safety.unsafeTemperatures ? `Investigate ${safety.unsafeTemperatures} unsafe temperature log and document the correction.` : 'Temperature logs are currently within threshold.',
     menu.actionCount ? `Review ${menu.actionCount} menu item recommendation before ordering ingredients.` : 'Menu mix is healthy this week.',
     menu.incompleteRecipeCount ? `${menu.incompleteRecipeCount} recipe-linked item has incomplete supplier costing.` : 'Recipe-linked supplier changes are flowing into menu margins.',
     suppliers.length ? `Check supplier savings for ${suppliers.map((row) => row.ingredientName).join(', ')}.` : 'No same-unit supplier switches need immediate review.',

@@ -4,7 +4,6 @@ import Landing from './pages/Landing.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Menu from './pages/Menu.jsx';
 import Compliance from './pages/Compliance.jsx';
-import Safety from './pages/Safety.jsx';
 import Suppliers from './pages/Suppliers.jsx';
 import Reputation from './pages/Reputation.jsx';
 
@@ -16,7 +15,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="menu" element={<Menu />} />
         <Route path="compliance" element={<Compliance />} />
-        <Route path="safety" element={<Safety />} />
+        <Route path="safety" element={<Navigate to="/dashboard" replace />} />
         <Route path="suppliers" element={<Suppliers />} />
         <Route path="reputation" element={<Reputation />} />
       </Route>

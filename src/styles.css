@@ -181,12 +181,20 @@ label { display: grid; gap: 6px; color: #65756f; font-size: 12px; font-weight: 8
   gap: 12px;
   margin-top: 16px;
 }
+.manual-cost-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) repeat(3, minmax(150px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+.manual-cost-panel div,
 .recipe-summary div {
   border: 1px solid #dce7e1;
   border-radius: 8px;
   padding: 14px;
   background: #f8fbf9;
 }
+.manual-cost-panel span,
 .recipe-summary span {
   display: block;
   color: #687970;
@@ -194,11 +202,13 @@ label { display: grid; gap: 6px; color: #65756f; font-size: 12px; font-weight: 8
   font-weight: 800;
   margin-bottom: 6px;
 }
+.manual-cost-panel strong,
 .recipe-summary strong { font-size: 22px; }
 .warning-text { color: #8a5f00; font-weight: 700; }
 
 @media (max-width: 900px) {
   .hero, .app-shell, .two-col, .two-col.uneven { grid-template-columns: 1fr; }
+  .manual-cost-panel { grid-template-columns: 1fr; }
   .sidebar { position: static; height: auto; }
   .sidebar nav { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
   .topbar, .section-heading { align-items: flex-start; flex-direction: column; }

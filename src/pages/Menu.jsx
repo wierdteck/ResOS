@@ -39,6 +39,31 @@ export default function Menu() {
     saveItems(items.map((item) => (item.id === id ? { ...item, [key]: value } : item)));
   }
 
+  function addMenuItem() {
+    const item = {
+      id: `menu-${Date.now()}`,
+      name: 'New Menu Item',
+      category: 'Entree',
+      price: 0,
+      ingredientCost: 0,
+      costMode: 'manual',
+      avgPrepMinutes: 0,
+      salesThisWeek: 0,
+      station: 'Kitchen',
+      notes: '',
+    };
+    saveItems([...items, item]);
+    setSelectedId(item.id);
+  }
+
+  function removeMenuItem(id) {
+    const nextItems = items.filter((item) => item.id !== id);
+    const nextRecipes = recipes.filter((row) => row.menuItemId !== id);
+    saveItems(nextItems);
+    saveRecipes(nextRecipes);
+    if (selectedId === id) setSelectedId(nextItems[0]?.id || '');
+  }
+
   function addRecipeRow() {
     if (!selectedItem) return;
     const firstSupplier = supplierItems[0];
@@ -81,7 +106,10 @@ export default function Menu() {
     <div className="page-stack">
       <div className="section-heading">
         <div><p className="eyebrow">Menu Intelligence</p><h2>Profit and recipe-linked costing</h2></div>
-        <Button icon={Sparkles} onClick={() => setSummary(analyzeMenu(items, recipes, supplierItems))}>Analyze Menu</Button>
+        <div className="button-row">
+          <Button variant="secondary" icon={Plus} onClick={addMenuItem}>Add Menu Item</Button>
+          <Button icon={Sparkles} onClick={() => setSummary(analyzeMenu(items, recipes, supplierItems))}>Analyze Menu</Button>
+        </div>
       </div>
       <p className="muted">Recommendations are computed from effective ingredient cost. Manual dishes use typed cost; auto-costed dishes follow matching supplier prices.</p>
       {summary ? <Card className="insight">{summary}</Card> : null}
@@ -91,7 +119,7 @@ export default function Menu() {
           <table>
             <thead>
               <tr>
-                <th>Dish</th><th>Category</th><th>Cost Mode</th><th>Price</th><th>Ingredient Cost</th><th>Prep</th><th>Sales</th><th>Station</th><th>Profit</th><th>Food Cost</th><th>Action</th><th>Notes</th>
+                <th>Dish</th><th>Category</th><th>Cost Mode</th><th>Price</th><th>Ingredient Cost</th><th>Prep</th><th>Sales</th><th>Station</th><th>Profit</th><th>Food Cost</th><th>Action</th><th>Notes</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -104,9 +132,6 @@ export default function Menu() {
                       <option value="manual">Manual Cost</option>
                       <option value="recipe">Auto From Recipe/Suppliers</option>
                     </select>
-                    <Badge tone={row.costMode === 'recipe' ? (row.costIncomplete ? 'warning' : 'info') : 'neutral'}>
-                      {row.costMode === 'recipe' ? (row.costIncomplete ? 'Incomplete Cost' : 'Auto Cost') : 'Manual Cost'}
-                    </Badge>
                   </td>
                   <td><NumericInput value={row.price} step="0.01" onCommit={(value) => updateItem(row.id, 'price', value)} /></td>
                   <td>
@@ -123,6 +148,19 @@ export default function Menu() {
                   <td><span className="derived-value">{percent(row.foodCostPercent)}</span></td>
                   <td><Badge tone={toneByRecommendation[row.recommendation]}>{row.recommendation}</Badge></td>
                   <td><input value={row.notes} onChange={(event) => updateItem(row.id, 'notes', event.target.value)} /></td>
+                  <td>
+                    <button
+                      className="icon-only danger"
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        removeMenuItem(row.id);
+                      }}
+                      aria-label="Remove menu item"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -136,6 +174,7 @@ export default function Menu() {
           analyticsRow={selectedAnalytics}
           recipeRows={recipes.filter((row) => row.menuItemId === selectedItem.id)}
           supplierItems={supplierItems}
+          onUpdateMenuItem={updateItem}
           onAdd={addRecipeRow}
           onUpdate={updateRecipe}
           onRemove={removeRecipe}
@@ -156,10 +195,33 @@ export default function Menu() {
   );
 }
 
-function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onAdd, onUpdate, onRemove }) {
+function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onUpdateMenuItem, onAdd, onUpdate, onRemove }) {
   const recipeCost = getRecipeCost(menuItem.id, recipeRows, supplierItems);
   const ingredientNames = useMemo(() => [...new Set(supplierItems.map((item) => item.ingredientName))], [supplierItems]);
   const specificSuppliers = (row) => supplierItems.filter((item) => item.ingredientName === row.ingredientName || item.id === row.supplierItemId);
+
+  if (menuItem.costMode === 'manual') {
+    return (
+      <Card className="recipe-builder">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Manual Cost Builder</p>
+            <h2>{menuItem.name}</h2>
+          </div>
+        </div>
+        <p className="muted">This item is using a manually entered ingredient cost, so supplier recipe rows are not required.</p>
+        <div className="manual-cost-panel">
+          <label>
+            Manual ingredient cost
+            <NumericInput value={menuItem.ingredientCost} step="0.01" onCommit={(value) => onUpdateMenuItem(menuItem.id, 'ingredientCost', value)} />
+          </label>
+          <div><span>Price</span><strong>{currency(menuItem.price)}</strong></div>
+          <div><span>Estimated gross profit</span><strong>{currency(analyticsRow?.grossProfit || 0)}</strong></div>
+          <div><span>Food cost margin</span><strong>{percent(analyticsRow?.foodCostPercent || 0)}</strong></div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="recipe-builder">
@@ -169,7 +231,6 @@ function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onAd
           <h2>{menuItem.name}</h2>
         </div>
         <div className="button-row">
-          <Badge tone={menuItem.costMode === 'recipe' ? 'info' : 'neutral'}>{menuItem.costMode === 'recipe' ? 'Auto from suppliers' : 'Manual cost'}</Badge>
           <Button variant="secondary" icon={Plus} onClick={onAdd}>Add Ingredient</Button>
         </div>
       </div>
@@ -191,12 +252,11 @@ function RecipeBuilder({ menuItem, analyticsRow, recipeRows, supplierItems, onAd
                     <option value="cheapest">Cheapest supplier</option>
                     <option value="specificSupplier">Specific supplier</option>
                   </select>
-                  <Badge tone={row.costingMode === 'cheapest' ? 'good' : 'info'}>{row.costingMode === 'cheapest' ? 'Cheapest Supplier' : 'Specific Supplier'}</Badge>
                 </td>
                 <td>
                   <select disabled={row.costingMode !== 'specificSupplier'} value={row.supplierItemId || ''} onChange={(event) => onUpdate(row.id, 'supplierItemId', event.target.value)}>
                     <option value="">Select supplier</option>
-                    {specificSuppliers(row).map((item) => <option key={item.id} value={item.id}>{item.supplierName} · {currency(item.price)} / {item.unit}</option>)}
+                    {specificSuppliers(row).map((item) => <option key={item.id} value={item.id}>{item.supplierName} - {currency(item.price)} / {item.unit}</option>)}
                   </select>
                 </td>
                 <td><span className="derived-value">{currency(row.lineCost)}</span></td>
