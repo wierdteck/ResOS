@@ -129,7 +129,7 @@ export default function Menu() {
           <table>
             <thead>
               <tr>
-                <th>Dish</th><th>Category</th><th>Cost Mode</th><th>Price</th><th>Ingredient Cost</th><th>Prep</th><th>Sales</th><th>Station</th><th>Profit</th><th>Food Cost</th><th>Notes</th><th></th>
+                <th>Dish</th><th>Category</th><th>Cost Mode</th><th>Price</th><th>Ingredient Cost</th><th>Prep (min.)</th><th>Sales</th><th>Profit</th><th>Food Cost</th><th>Notes</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -151,9 +151,8 @@ export default function Menu() {
                       <NumericInput value={row.ingredientCost} step="0.01" onCommit={(value) => updateItem(row.id, 'ingredientCost', value)} />
                     )}
                   </td>
-                  <td><NumericInput value={row.avgPrepMinutes} step="1" onCommit={(value) => updateItem(row.id, 'avgPrepMinutes', value)} /></td>
-                  <td><NumericInput value={row.salesThisWeek} step="1" onCommit={(value) => updateItem(row.id, 'salesThisWeek', value)} /></td>
-                  <td><input value={row.station} onChange={(event) => updateItem(row.id, 'station', event.target.value)} /></td>
+                  <td><NumericInput value={row.avgPrepMinutes} step="1" decimals={0} onCommit={(value) => updateItem(row.id, 'avgPrepMinutes', value)} /></td>
+                  <td><NumericInput value={row.salesThisWeek} step="1" decimals={0} onCommit={(value) => updateItem(row.id, 'salesThisWeek', value)} /></td>
                   <td><span className="derived-value">{currency(row.grossProfit)}</span></td>
                   <td><span className="derived-value">{percent(row.foodCostPercent)}</span></td>
                   <td><input value={row.notes} onChange={(event) => updateItem(row.id, 'notes', event.target.value)} /></td>
