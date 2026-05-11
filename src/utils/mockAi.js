@@ -19,7 +19,7 @@ export function analyzeMenu(menuItems, recipeIngredients = [], supplierItems = [
     actions.length
       ? `Action items: ${actions.map((item) => `${item.name}: ${item.recommendation}`).join('; ')}.`
       : 'The current menu mix is balanced; keep watching ingredient costs and prep bottlenecks.',
-    'These recommendations are deterministic analytics translated into plain language, not an external AI call.',
+    'These recommendations are deterministic analytics translated into plain language.',
   ]);
 }
 
