@@ -129,7 +129,7 @@ export default function Menu() {
           <table>
             <thead>
               <tr>
-                <th>Dish</th><th>Category</th><th>Cost Mode</th><th>Price</th><th>Ingredient Cost</th><th>Prep</th><th>Sales</th><th>Station</th><th>Profit</th><th>Food Cost</th><th>Action</th><th>Notes</th><th></th>
+                <th>Dish</th><th>Category</th><th>Cost Mode</th><th>Price</th><th>Ingredient Cost</th><th>Prep</th><th>Sales</th><th>Station</th><th>Profit</th><th>Food Cost</th><th>Notes</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -156,7 +156,6 @@ export default function Menu() {
                   <td><input value={row.station} onChange={(event) => updateItem(row.id, 'station', event.target.value)} /></td>
                   <td><span className="derived-value">{currency(row.grossProfit)}</span></td>
                   <td><span className="derived-value">{percent(row.foodCostPercent)}</span></td>
-                  <td><Badge tone={toneByRecommendation[row.recommendation]}>{row.recommendation}</Badge></td>
                   <td><input value={row.notes} onChange={(event) => updateItem(row.id, 'notes', event.target.value)} /></td>
                   <td>
                     <button
