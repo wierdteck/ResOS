@@ -1,4 +1,4 @@
-import { getComplianceAnalytics, getComplianceDisplayStatus, getMenuAnalytics, getProfileMismatches, getSafetyAnalytics, getSupplierAnalytics, getReviewAnalytics, isUnsafeTemperature, currency } from './analytics.js';
+import { getComplianceAnalytics, getComplianceDisplayStatus, getMenuAnalytics, getProfileMismatches, getSupplierAnalytics, getReviewAnalytics, isUnsafeTemperature, currency } from './analytics.js';
 
 function sentenceList(items) {
   return items.filter(Boolean).join(' ');
@@ -30,17 +30,6 @@ export function generateCompliancePlan(tasks) {
     `There are ${analytics.overdue} overdue compliance tasks and ${analytics.highRiskOverdue} high-risk overdue tasks.`,
     urgent.length ? `Handle first: ${urgent.map((task) => `${task.title} (${task.owner})`).slice(0, 4).join(', ')}.` : 'No urgent compliance blockers are visible.',
     'Assign one owner per task, collect proof after completion, and review the due-soon queue at manager closeout.',
-  ]);
-}
-
-export function generateSafetyPlan(tasks) {
-  const analytics = getSafetyAnalytics(tasks);
-  const unsafe = tasks.filter(isUnsafeTemperature);
-  const overdue = tasks.filter((task) => task.status === 'overdue');
-  return sentenceList([
-    `${analytics.dueToday} checklist items are due today and ${analytics.overdue} are overdue.`,
-    unsafe.length ? `Temperature attention needed: ${unsafe.map((task) => `${task.title} logged at ${task.temperatureValue}F`).join(', ')}.` : 'All logged temperatures are inside the rule thresholds.',
-    overdue.length ? `Close overdue work before service: ${overdue.map((task) => task.title).join(', ')}.` : 'No overdue cleaning tasks are blocking today.',
   ]);
 }
 

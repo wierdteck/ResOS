@@ -166,16 +166,6 @@ export function isUnsafeTemperature(task) {
   return false;
 }
 
-export function getSafetyAnalytics(tasks) {
-  return {
-    overdue: tasks.filter((task) => task.status === 'overdue').length,
-    dueToday: tasks.filter((task) => task.status === 'due_today').length,
-    completed: tasks.filter((task) => task.status === 'done').length,
-    unsafeTemperatures: tasks.filter(isUnsafeTemperature).length,
-    temperatureChecksLogged: tasks.filter((task) => task.requiresTemperatureLog && task.temperatureValue !== undefined && task.temperatureValue !== '').length,
-  };
-}
-
 export function getSupplierAnalytics(items) {
   const groups = items.reduce((acc, item) => {
     acc[item.ingredientName] = acc[item.ingredientName] || [];

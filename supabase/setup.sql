@@ -63,7 +63,6 @@ as $$
       'menuItems',
       'recipeIngredients',
       'complianceTasks',
-      'safetyTasks',
       'supplierItems',
       'supplierPriceHistory',
       'reviews',
@@ -74,7 +73,6 @@ as $$
       'menuItems',
       'recipeIngredients',
       'complianceTasks',
-      'safetyTasks',
       'supplierItems',
       'supplierPriceHistory',
       'reviews',
@@ -137,21 +135,6 @@ as $$
       'notes',
       'completedAt'
     ])
-    and jsonb_typeof(value->'safetyTasks') = 'array'
-    and public.jsonb_array_objects_have_only_keys(value->'safetyTasks', array[
-      'id',
-      'title',
-      'area',
-      'frequency',
-      'assignedTo',
-      'lastCompleted',
-      'nextDue',
-      'status',
-      'requiresTemperatureLog',
-      'temperatureType',
-      'temperatureValue',
-      'notes'
-    ])
     and jsonb_typeof(value->'supplierItems') = 'array'
     and public.jsonb_array_objects_have_only_keys(value->'supplierItems', array[
       'id',
@@ -190,7 +173,6 @@ as $$
     and jsonb_array_length(value->'menuItems') <= 500
     and jsonb_array_length(value->'recipeIngredients') <= 2500
     and jsonb_array_length(value->'complianceTasks') <= 1000
-    and jsonb_array_length(value->'safetyTasks') <= 1000
     and jsonb_array_length(value->'supplierItems') <= 1000
     and jsonb_array_length(value->'supplierPriceHistory') <= 5000
     and jsonb_array_length(value->'reviews') <= 5000;
