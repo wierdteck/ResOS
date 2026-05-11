@@ -9,7 +9,6 @@ const navItems = [
   { to: '/dashboard', label: 'Overview', icon: Home, end: true },
   { to: '/dashboard/menu', label: 'Menu', icon: BarChart3 },
   { to: '/dashboard/compliance', label: 'Compliance', icon: ClipboardCheck },
-  { to: '/dashboard/safety', label: 'Safety', icon: ShieldCheck },
   { to: '/dashboard/suppliers', label: 'Suppliers', icon: Truck },
   { to: '/dashboard/reputation', label: 'Reputation', icon: Sparkles },
 ];

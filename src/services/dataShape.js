@@ -6,7 +6,6 @@ const MAX_COLLECTION_ROWS = {
   menuItems: 500,
   recipeIngredients: 2500,
   complianceTasks: 1000,
-  safetyTasks: 1000,
   supplierItems: 1000,
   supplierPriceHistory: 5000,
   reviews: 5000,
@@ -17,7 +16,6 @@ const TOP_LEVEL_KEYS = [
   'menuItems',
   'recipeIngredients',
   'complianceTasks',
-  'safetyTasks',
   'supplierItems',
   'supplierPriceHistory',
   'reviews',
@@ -29,7 +27,6 @@ const BUSINESS_PROFILE_KEYS = ['restaurantName', 'phone', 'address', 'mondayHour
 const MENU_KEYS = ['id', 'name', 'category', 'price', 'ingredientCost', 'costMode', 'avgPrepMinutes', 'salesThisWeek', 'station', 'notes'];
 const RECIPE_KEYS = ['id', 'menuItemId', 'ingredientName', 'quantity', 'unit', 'costingMode', 'supplierItemId', 'notes'];
 const COMPLIANCE_KEYS = ['id', 'title', 'category', 'owner', 'dueDate', 'recurrence', 'status', 'riskLevel', 'notes', 'completedAt'];
-const SAFETY_KEYS = ['id', 'title', 'area', 'frequency', 'assignedTo', 'lastCompleted', 'nextDue', 'status', 'requiresTemperatureLog', 'temperatureType', 'temperatureValue', 'notes'];
 const SUPPLIER_KEYS = ['id', 'supplierName', 'ingredientName', 'price', 'unit', 'lastUpdated', 'reliabilityScore', 'deliveryDays', 'notes'];
 const HISTORY_KEYS = ['id', 'supplierItemId', 'supplierName', 'ingredientName', 'price', 'unit', 'updatedAt', 'note'];
 const REVIEW_KEYS = ['id', 'platform', 'rating', 'date', 'text', 'category', 'urgency', 'replied', 'replyDraft'];
@@ -40,7 +37,6 @@ const COSTING_MODES = ['cheapest', 'specificSupplier'];
 const COMPLIANCE_CATEGORIES = ['License', 'Permit', 'Inspection', 'Training', 'Tax', 'Insurance'];
 const COMPLIANCE_STATUSES = ['scheduled', 'due_soon', 'overdue', 'compliant'];
 const RISK_LEVELS = ['low', 'medium', 'high'];
-const SAFETY_STATUSES = ['done', 'due_today', 'overdue'];
 const TEMPERATURE_TYPES = ['fridge', 'freezer', 'hot_holding', ''];
 const URGENCY_LEVELS = ['low', 'medium', 'high'];
 
@@ -91,7 +87,6 @@ function validateResosData(data) {
     menuItems: parseArray(value.menuItems, 'menuItems', MAX_COLLECTION_ROWS.menuItems, parseMenuItem),
     recipeIngredients: parseArray(value.recipeIngredients, 'recipeIngredients', MAX_COLLECTION_ROWS.recipeIngredients, parseRecipeIngredient),
     complianceTasks: parseArray(value.complianceTasks, 'complianceTasks', MAX_COLLECTION_ROWS.complianceTasks, parseComplianceTask),
-    safetyTasks: parseArray(value.safetyTasks, 'safetyTasks', MAX_COLLECTION_ROWS.safetyTasks, parseSafetyTask),
     supplierItems: parseArray(value.supplierItems, 'supplierItems', MAX_COLLECTION_ROWS.supplierItems, parseSupplierItem),
     supplierPriceHistory: parseArray(value.supplierPriceHistory, 'supplierPriceHistory', MAX_COLLECTION_ROWS.supplierPriceHistory, parseSupplierPriceHistory),
     reviews: parseArray(value.reviews, 'reviews', MAX_COLLECTION_ROWS.reviews, parseReview),
@@ -195,27 +190,6 @@ function parseComplianceTask(input, index) {
   };
 }
 
-function parseSafetyTask(input, index) {
-  const value = requireObject(input, `safetyTasks[${index}]`);
-  rejectUnknownKeys(value, SAFETY_KEYS, `safetyTasks[${index}]`);
-
-  return {
-    id: parseId(value.id, `safetyTasks[${index}].id`),
-    title: parseString(value.title, `safetyTasks[${index}].title`, { min: 1, max: 160 }),
-    area: parseString(value.area, `safetyTasks[${index}].area`, { max: 80 }),
-    frequency: parseString(value.frequency, `safetyTasks[${index}].frequency`, { max: 80 }),
-    assignedTo: parseString(value.assignedTo, `safetyTasks[${index}].assignedTo`, { max: 80 }),
-    lastCompleted: parseDate(value.lastCompleted, `safetyTasks[${index}].lastCompleted`),
-    nextDue: parseDate(value.nextDue, `safetyTasks[${index}].nextDue`),
-    status: parseEnum(value.status, SAFETY_STATUSES, `safetyTasks[${index}].status`),
-    requiresTemperatureLog: parseBoolean(value.requiresTemperatureLog, `safetyTasks[${index}].requiresTemperatureLog`),
-    temperatureType: parseEnum(value.temperatureType || '', TEMPERATURE_TYPES, `safetyTasks[${index}].temperatureType`),
-    temperatureValue: value.temperatureValue === '' || value.temperatureValue === undefined
-      ? ''
-      : parseNumber(value.temperatureValue, `safetyTasks[${index}].temperatureValue`, { min: -100, max: 300 }),
-    notes: parseString(value.notes, `safetyTasks[${index}].notes`, { max: 500 }),
-  };
-}
 
 function parseSupplierItem(input, index) {
   const value = requireObject(input, `supplierItems[${index}]`);

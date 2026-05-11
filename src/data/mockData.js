@@ -33,18 +33,6 @@ export const initialData = {
     { id: 'comp-7', title: 'Liability insurance renewal', category: 'Insurance', owner: 'Maya', dueDate: '2026-08-22', recurrence: 'yearly', status: 'compliant', riskLevel: 'medium', notes: 'Certificate stored in office binder.' },
     { id: 'comp-8', title: 'Grease trap service verification', category: 'Inspection', owner: 'Luis', dueDate: '2026-05-20', recurrence: 'quarterly', status: 'scheduled', riskLevel: 'low', notes: 'Confirm signed ticket after service.' },
   ],
-  safetyTasks: [
-    { id: 'safe-1', title: 'Fridge temperature check', area: 'Kitchen', frequency: 'daily', assignedTo: 'Ana', lastCompleted: '2026-05-09', nextDue: '2026-05-10', status: 'due_today', requiresTemperatureLog: true, temperatureType: 'fridge', temperatureValue: 42, notes: 'Line fridge running warm.' },
-    { id: 'safe-2', title: 'Freezer temperature check', area: 'Storage', frequency: 'daily', assignedTo: 'Ben', lastCompleted: '2026-05-10', nextDue: '2026-05-10', status: 'done', requiresTemperatureLog: true, temperatureType: 'freezer', temperatureValue: -3, notes: 'Stable.' },
-    { id: 'safe-3', title: 'Sanitize prep surfaces', area: 'Kitchen', frequency: 'daily', assignedTo: 'Ana', lastCompleted: '2026-05-09', nextDue: '2026-05-10', status: 'due_today', requiresTemperatureLog: false, notes: 'Do before dinner prep.' },
-    { id: 'safe-4', title: 'Clean fryer', area: 'Equipment', frequency: 'weekly', assignedTo: 'Luis', lastCompleted: '2026-05-01', nextDue: '2026-05-08', status: 'overdue', requiresTemperatureLog: false, notes: 'Oil changed, exterior still needs clean.' },
-    { id: 'safe-5', title: 'Mop kitchen floor', area: 'Kitchen', frequency: 'daily', assignedTo: 'Ben', lastCompleted: '2026-05-09', nextDue: '2026-05-10', status: 'due_today', requiresTemperatureLog: false, notes: 'Use degreaser near grill.' },
-    { id: 'safe-6', title: 'Check sanitizer concentration', area: 'Dining Room', frequency: 'daily', assignedTo: 'Rae', lastCompleted: '2026-05-10', nextDue: '2026-05-10', status: 'done', requiresTemperatureLog: false, notes: 'Test strips in server station.' },
-    { id: 'safe-7', title: 'Label/date stored food', area: 'Storage', frequency: 'daily', assignedTo: 'Ana', lastCompleted: '2026-05-08', nextDue: '2026-05-09', status: 'overdue', requiresTemperatureLog: false, notes: 'Check sauces and prepped romaine.' },
-    { id: 'safe-8', title: 'Clean bathroom', area: 'Bathroom', frequency: 'daily', assignedTo: 'Rae', lastCompleted: '2026-05-10', nextDue: '2026-05-10', status: 'done', requiresTemperatureLog: false, notes: 'Restock paper towels.' },
-    { id: 'safe-9', title: 'Empty grease bin', area: 'Equipment', frequency: 'weekly', assignedTo: 'Luis', lastCompleted: '2026-05-02', nextDue: '2026-05-09', status: 'overdue', requiresTemperatureLog: false, notes: 'Before lunch rush.' },
-    { id: 'safe-10', title: 'Inspect dry storage', area: 'Storage', frequency: 'weekly', assignedTo: 'Maya', lastCompleted: '2026-05-05', nextDue: '2026-05-12', status: 'done', requiresTemperatureLog: false, notes: 'Rotate flour and coffee beans.' },
-  ],
   supplierItems: [
     { id: 'sup-1', supplierName: 'Restaurant Depot', ingredientName: 'chicken breast', price: 3.25, unit: 'lb', lastUpdated: '2026-05-05', reliabilityScore: 87, deliveryDays: 'Mon, Thu', notes: 'Best bulk price.' },
     { id: 'sup-2', supplierName: 'Valley Foods', ingredientName: 'chicken breast', price: 3.55, unit: 'lb', lastUpdated: '2026-05-07', reliabilityScore: 93, deliveryDays: 'Tue, Fri', notes: 'More consistent trim.' },
