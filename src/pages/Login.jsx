@@ -144,6 +144,10 @@ export default function Login() {
         >
           {mode === 'reset' ? 'Back to sign in' : 'Forgot password?'}
         </button>
+
+        <p style={{ fontSize: '0.75rem', color: '#999', marginTop: '1.5rem', textAlign: 'center' }}>
+          Demo credentials: <strong>demo@demo.demo</strong> / <strong>demo</strong>
+        </p>
       </Card>
     </main>
   );
