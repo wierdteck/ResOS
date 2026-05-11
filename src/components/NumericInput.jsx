@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-export default function NumericInput({ value, onCommit, min, max, step = '1', disabled = false, className = '' }) {
+export default function NumericInput({ value, onCommit, min, max, step = '1', decimals = 2, disabled = false, className = '' }) {
   const [draft, setDraft] = useState(String(value ?? 0));
 
   useEffect(() => {
-    setDraft(String(value ?? 0));
+    setDraft((value ?? 0).toFixed(decimals));
   }, [value]);
 
   function commit(nextDraft = draft) {
@@ -12,8 +12,9 @@ export default function NumericInput({ value, onCommit, min, max, step = '1', di
     if (nextDraft === '' || Number.isNaN(parsed)) parsed = 0;
     if (min !== undefined) parsed = Math.max(Number(min), parsed);
     if (max !== undefined) parsed = Math.min(Number(max), parsed);
+    parsed = Math.round(parsed * Math.pow(10, decimals)) / Math.pow(10, decimals);
     onCommit(parsed);
-    setDraft(String(parsed));
+    setDraft(parsed.toFixed(decimals));
   }
 
   return (
