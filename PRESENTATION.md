@@ -3,8 +3,8 @@
 **A lightweight operating dashboard for independent restaurants.**
 
 Team members:
-- Member 1: TBD
-- Member 2: TBD
+- Member 1: Aarav
+- Member 2: Allison
 
 ## Mock Customer
 

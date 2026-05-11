@@ -1,31 +1,41 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus, Sparkles, Trash2 } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import NumericInput from '../components/NumericInput.jsx';
-import { getSupplierItems, getSupplierPriceHistory, saveSupplierItems, saveSupplierPriceHistory } from '../services/dataStore.js';
+import { useResosData } from '../services/ResosDataProvider.jsx';
 import { currency, getSupplierAnalytics } from '../utils/analytics.js';
 import { suggestSupplierActions } from '../utils/mockAi.js';
+import { createId } from '../utils/ids.js';
 
 const units = ['lb', 'oz', 'gal', 'qt', 'pt', 'fl oz', 'each', 'case', 'dozen', 'bag', 'box'];
 
 export default function Suppliers() {
-  const [items, setItems] = useState(getSupplierItems());
-  const [history, setHistory] = useState(getSupplierPriceHistory());
+  const { data, saveCollection } = useResosData();
+  const [items, setItems] = useState(data.supplierItems);
+  const [history, setHistory] = useState(data.supplierPriceHistory);
   const [selectedId, setSelectedId] = useState(items[0]?.id || '');
   const [showOptimize, setShowOptimize] = useState(false);
   const [actions, setActions] = useState('');
   const analytics = getSupplierAnalytics(items);
   const selectedHistory = useMemo(() => history.filter((row) => row.supplierItemId === selectedId).slice(-6).reverse(), [history, selectedId]);
 
+  useEffect(() => {
+    setItems(data.supplierItems);
+    setHistory(data.supplierPriceHistory);
+    setSelectedId((current) => (data.supplierItems.some((item) => item.id === current) ? current : data.supplierItems[0]?.id || ''));
+  }, [data.supplierItems, data.supplierPriceHistory]);
+
   function saveItems(next) {
-    setItems(saveSupplierItems(next));
+    setItems(next);
+    void saveCollection('supplierItems', next).catch(() => {});
   }
 
   function appendHistory(item, note) {
-    const next = [...history, { id: `hist-${Date.now()}`, supplierItemId: item.id, supplierName: item.supplierName, ingredientName: item.ingredientName, price: Number(item.price), unit: item.unit, updatedAt: new Date().toISOString().slice(0, 10), note }];
-    setHistory(saveSupplierPriceHistory(next));
+    const next = [...history, { id: createId('hist'), supplierItemId: item.id, supplierName: item.supplierName, ingredientName: item.ingredientName, price: Number(item.price), unit: item.unit, updatedAt: new Date().toISOString().slice(0, 10), note }];
+    setHistory(next);
+    void saveCollection('supplierPriceHistory', next).catch(() => {});
   }
 
   function update(id, key, value) {
@@ -36,7 +46,7 @@ export default function Suppliers() {
   }
 
   function addItem() {
-    const item = { id: `sup-${Date.now()}`, supplierName: 'New Supplier', ingredientName: 'ingredient', price: 1, unit: 'lb', lastUpdated: new Date().toISOString().slice(0, 10), reliabilityScore: 80, deliveryDays: 'Mon', notes: '' };
+    const item = { id: createId('sup'), supplierName: 'New Supplier', ingredientName: 'ingredient', price: 1, unit: 'lb', lastUpdated: new Date().toISOString().slice(0, 10), reliabilityScore: 80, deliveryDays: 'Mon', notes: '' };
     saveItems([...items, item]);
     setSelectedId(item.id);
     appendHistory(item, 'New supplier item created.');

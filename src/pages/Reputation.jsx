@@ -1,24 +1,25 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Copy, MessageSquareText, Sparkles } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import MetricCard from '../components/MetricCard.jsx';
-import { getBusinessProfiles, getReviews, saveReviews } from '../services/dataStore.js';
+import { useResosData } from '../services/ResosDataProvider.jsx';
 import { chartRowsFromCounts, countBy, getProfileMismatches, getReviewAnalytics } from '../utils/analytics.js';
 import { generateProfileUpdatePlan, generateReviewReply, summarizeReviews } from '../utils/mockAi.js';
 
 const all = 'all';
 
 export default function Reputation() {
-  const [reviews, setReviews] = useState(getReviews());
-  const [profiles] = useState(getBusinessProfiles());
+  const { data, saveCollection } = useResosData();
+  const [reviews, setReviews] = useState(data.reviews);
   const [platform, setPlatform] = useState(all);
   const [category, setCategory] = useState(all);
   const [urgency, setUrgency] = useState(all);
   const [summary, setSummary] = useState('');
   const [profilePlan, setProfilePlan] = useState('');
+  const profiles = data.businessProfiles;
   const analytics = getReviewAnalytics(reviews);
   const mismatches = getProfileMismatches(profiles);
   const filtered = useMemo(() => reviews.filter((review) =>
@@ -27,8 +28,13 @@ export default function Reputation() {
     (urgency === all || review.urgency === urgency)
   ), [reviews, platform, category, urgency]);
 
+  useEffect(() => {
+    setReviews(data.reviews);
+  }, [data.reviews]);
+
   function save(next) {
-    setReviews(saveReviews(next));
+    setReviews(next);
+    void saveCollection('reviews', next).catch(() => {});
   }
 
   function draftReply(id) {
@@ -62,11 +68,11 @@ export default function Reputation() {
           {filtered.map((review) => (
             <Card key={review.id} className={`review-card urgency-${review.urgency}`}>
               <div className="task-head">
-                <strong>{review.platform} · {review.rating} stars</strong>
+                <strong>{review.platform} - {review.rating} stars</strong>
                 <Badge tone={review.urgency === 'high' ? 'danger' : review.urgency === 'medium' ? 'warning' : 'good'}>{review.urgency}</Badge>
               </div>
               <p>{review.text}</p>
-              <span className="muted">{review.date} · {review.category.replace('_', ' ')}</span>
+              <span className="muted">{review.date} - {review.category.replace('_', ' ')}</span>
               {review.replyDraft ? <div className="reply-draft"><strong>Reply draft</strong><p>{review.replyDraft}</p></div> : null}
               <Button variant="ghost" icon={MessageSquareText} onClick={() => draftReply(review.id)}>Generate Reply</Button>
             </Card>

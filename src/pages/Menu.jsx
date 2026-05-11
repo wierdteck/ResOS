@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Plus, Sparkles, Trash2 } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import NumericInput from '../components/NumericInput.jsx';
-import { getMenuItems, getRecipeIngredients, getSupplierItems, saveMenuItems, saveRecipeIngredients } from '../services/dataStore.js';
+import { useResosData } from '../services/ResosDataProvider.jsx';
 import { analyzeMenu } from '../utils/mockAi.js';
 import { currency, getMenuAnalytics, getRecipeCost, percent } from '../utils/analytics.js';
+import { createId } from '../utils/ids.js';
 
 const units = ['lb', 'oz', 'gal', 'qt', 'pt', 'fl oz', 'each', 'case', 'dozen', 'bag', 'box'];
 const toneByRecommendation = {
@@ -18,21 +19,30 @@ const toneByRecommendation = {
 };
 
 export default function Menu() {
-  const [items, setItems] = useState(getMenuItems());
-  const [recipes, setRecipes] = useState(getRecipeIngredients());
-  const [supplierItems] = useState(getSupplierItems());
+  const { data, saveCollection } = useResosData();
+  const [items, setItems] = useState(data.menuItems);
+  const [recipes, setRecipes] = useState(data.recipeIngredients);
   const [selectedId, setSelectedId] = useState(items[0]?.id || '');
   const [summary, setSummary] = useState('');
+  const supplierItems = data.supplierItems;
   const analytics = getMenuAnalytics(items, recipes, supplierItems);
   const selectedItem = items.find((item) => item.id === selectedId) || items[0];
   const selectedAnalytics = analytics.rows.find((item) => item.id === selectedItem?.id);
 
+  useEffect(() => {
+    setItems(data.menuItems);
+    setRecipes(data.recipeIngredients);
+    setSelectedId((current) => (data.menuItems.some((item) => item.id === current) ? current : data.menuItems[0]?.id || ''));
+  }, [data.menuItems, data.recipeIngredients]);
+
   function saveItems(next) {
-    setItems(saveMenuItems(next));
+    setItems(next);
+    void saveCollection('menuItems', next).catch(() => {});
   }
 
   function saveRecipes(next) {
-    setRecipes(saveRecipeIngredients(next));
+    setRecipes(next);
+    void saveCollection('recipeIngredients', next).catch(() => {});
   }
 
   function updateItem(id, key, value) {
@@ -41,7 +51,7 @@ export default function Menu() {
 
   function addMenuItem() {
     const item = {
-      id: `menu-${Date.now()}`,
+      id: createId('menu'),
       name: 'New Menu Item',
       category: 'Entree',
       price: 0,
@@ -70,7 +80,7 @@ export default function Menu() {
     saveRecipes([
       ...recipes,
       {
-        id: `rec-${Date.now()}`,
+        id: createId('rec'),
         menuItemId: selectedItem.id,
         ingredientName: firstSupplier?.ingredientName || '',
         quantity: 0,

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { BarChart3, ClipboardCheck, Sparkles, Star, TrendingUp, Truck } from 'lucide-react';
 import Card from '../components/Card.jsx';
 import MetricCard from '../components/MetricCard.jsx';
-import { getAllData } from '../services/dataStore.js';
+import { useResosData } from '../services/ResosDataProvider.jsx';
 import { currency, getComplianceAnalytics, getMenuAnalytics, getReviewAnalytics, getSupplierAnalytics } from '../utils/analytics.js';
 import { generateOverallActionPlan } from '../utils/mockAi.js';
 
@@ -14,7 +14,7 @@ const cards = [
 ];
 
 export default function Dashboard() {
-  const data = getAllData();
+  const { data } = useResosData();
   const menu = getMenuAnalytics(data.menuItems, data.recipeIngredients, data.supplierItems);
   const compliance = getComplianceAnalytics(data.complianceTasks);
   const suppliers = getSupplierAnalytics(data.supplierItems).filter((row) => !row.unitMismatch && row.savings > 0);

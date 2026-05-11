@@ -1,24 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { CheckCircle2, Plus, Sparkles, Trash2 } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import MetricCard from '../components/MetricCard.jsx';
-import { getComplianceTasks, saveComplianceTasks } from '../services/dataStore.js';
+import { useResosData } from '../services/ResosDataProvider.jsx';
 import { chartRowsFromCounts, countBy, getComplianceAnalytics, getComplianceDisplayStatus } from '../utils/analytics.js';
 import { generateCompliancePlan } from '../utils/mockAi.js';
+import { createId } from '../utils/ids.js';
 
 const categories = ['License', 'Permit', 'Inspection', 'Training', 'Tax', 'Insurance'];
 const riskOptions = ['low', 'medium', 'high'];
 
 export default function Compliance() {
-  const [tasks, setTasks] = useState(getComplianceTasks());
+  const { data, saveCollection } = useResosData();
+  const [tasks, setTasks] = useState(data.complianceTasks);
   const [plan, setPlan] = useState('');
   const analytics = getComplianceAnalytics(tasks);
 
+  useEffect(() => {
+    setTasks(data.complianceTasks);
+  }, [data.complianceTasks]);
+
   function save(next) {
-    setTasks(saveComplianceTasks(next));
+    setTasks(next);
+    void saveCollection('complianceTasks', next).catch(() => {});
   }
 
   function update(id, key, value) {
@@ -26,7 +33,7 @@ export default function Compliance() {
   }
 
   function addTask() {
-    save([...tasks, { id: `comp-${Date.now()}`, title: 'New compliance task', category: 'Permit', owner: 'Maya', dueDate: '2026-05-31', recurrence: 'one-time', status: 'scheduled', riskLevel: 'medium', notes: '' }]);
+    save([...tasks, { id: createId('comp'), title: 'New compliance task', category: 'Permit', owner: 'Maya', dueDate: '2026-05-31', recurrence: 'one-time', status: 'scheduled', riskLevel: 'medium', notes: '' }]);
   }
 
   function markDone(id) {
