@@ -8,6 +8,9 @@ export const saveAllData = (data) => activeStore.saveAllData(data);
 export const getMenuItems = () => activeStore.getCollection('menuItems');
 export const saveMenuItems = (items) => activeStore.saveCollection('menuItems', items);
 
+export const getRecipeIngredients = () => activeStore.getCollection('recipeIngredients');
+export const saveRecipeIngredients = (items) => activeStore.saveCollection('recipeIngredients', items);
+
 export const getComplianceTasks = () => activeStore.getCollection('complianceTasks');
 export const saveComplianceTasks = (tasks) => activeStore.saveCollection('complianceTasks', tasks);
 

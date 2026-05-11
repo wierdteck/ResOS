@@ -16,7 +16,7 @@ const cards = [
 
 export default function Dashboard() {
   const data = getAllData();
-  const menu = getMenuAnalytics(data.menuItems);
+  const menu = getMenuAnalytics(data.menuItems, data.recipeIngredients, data.supplierItems);
   const compliance = getComplianceAnalytics(data.complianceTasks);
   const safety = getSafetyAnalytics(data.safetyTasks);
   const suppliers = getSupplierAnalytics(data.supplierItems).filter((row) => !row.unitMismatch && row.savings > 0);

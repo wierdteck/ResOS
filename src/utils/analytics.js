@@ -6,20 +6,105 @@ export function percent(value) {
   return `${Math.round((Number(value) || 0) * 100)}%`;
 }
 
-export function getMenuMetrics(item) {
+export function safeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+export function safeDivide(numerator, denominator, fallback = 0) {
+  const top = safeNumber(numerator);
+  const bottom = safeNumber(denominator);
+  if (bottom === 0) return fallback;
+  return top / bottom;
+}
+
+export function resolveRecipeIngredientCost(recipeRow, supplierItems) {
+  const quantity = safeNumber(recipeRow.quantity);
+  let supplier = null;
+  let warning = '';
+
+  if (recipeRow.costingMode === 'specificSupplier') {
+    supplier = supplierItems.find((item) => item.id === recipeRow.supplierItemId);
+    if (!supplier) warning = 'No supplier selected';
+    else if (supplier.unit !== recipeRow.unit) warning = 'unit mismatch; compare manually';
+  } else {
+    const ingredientMatches = supplierItems.filter((item) => item.ingredientName === recipeRow.ingredientName);
+    const unitMatches = ingredientMatches.filter((item) => item.unit === recipeRow.unit);
+    if (!ingredientMatches.length) warning = 'No matching supplier';
+    else if (!unitMatches.length) warning = 'unit mismatch; compare manually';
+    else supplier = [...unitMatches].sort((a, b) => safeNumber(a.price) - safeNumber(b.price))[0];
+  }
+
+  if (warning) {
+    return { ...recipeRow, supplier: supplier || null, lineCost: 0, warning, complete: false };
+  }
+
+  return {
+    ...recipeRow,
+    supplier,
+    lineCost: quantity * safeNumber(supplier.price),
+    warning: '',
+    complete: true,
+  };
+}
+
+export function getRecipeCost(menuItemId, recipeIngredients = [], supplierItems = []) {
+  const rows = recipeIngredients
+    .filter((row) => row.menuItemId === menuItemId)
+    .map((row) => resolveRecipeIngredientCost(row, supplierItems));
+  return {
+    rows,
+    total: rows.reduce((sum, row) => sum + row.lineCost, 0),
+    incomplete: rows.some((row) => !row.complete),
+  };
+}
+
+export function effectiveIngredientCost(menuItem, recipeIngredients = [], supplierItems = []) {
+  if (menuItem.costMode !== 'recipe') {
+    return {
+      cost: safeNumber(menuItem.ingredientCost),
+      incomplete: false,
+      source: 'manual',
+      recipeRows: [],
+    };
+  }
+
+  const recipe = getRecipeCost(menuItem.id, recipeIngredients, supplierItems);
+  return {
+    cost: recipe.total,
+    incomplete: recipe.incomplete || recipe.rows.length === 0,
+    source: 'recipe',
+    recipeRows: recipe.rows,
+  };
+}
+
+export function getMenuMetrics(item, recipeIngredients = [], supplierItems = []) {
   const price = Number(item.price) || 0;
-  const ingredientCost = Number(item.ingredientCost) || 0;
-  const avgPrepMinutes = Number(item.avgPrepMinutes) || 1;
-  const salesThisWeek = Number(item.salesThisWeek) || 0;
+  const costInfo = effectiveIngredientCost(item, recipeIngredients, supplierItems);
+  const ingredientCost = costInfo.cost;
+  const avgPrepMinutes = safeNumber(item.avgPrepMinutes);
+  const salesThisWeek = safeNumber(item.salesThisWeek);
   const grossProfit = price - ingredientCost;
-  const foodCostPercent = price > 0 ? ingredientCost / price : 0;
+  const foodCostPercent = safeDivide(ingredientCost, price);
   const weeklyRevenue = price * salesThisWeek;
   const weeklyGrossProfit = grossProfit * salesThisWeek;
-  const profitPerPrepMinute = grossProfit / avgPrepMinutes;
+  const profitPerPrepMinute = safeDivide(grossProfit, avgPrepMinutes);
   const prepBurden = avgPrepMinutes * salesThisWeek;
   const recommendation = getMenuRecommendation({ salesThisWeek, foodCostPercent, grossProfit, prepBurden, profitPerPrepMinute });
 
-  return { grossProfit, foodCostPercent, weeklyRevenue, weeklyGrossProfit, profitPerPrepMinute, prepBurden, recommendation };
+  return {
+    grossProfit,
+    foodCostPercent,
+    weeklyRevenue,
+    weeklyGrossProfit,
+    profitPerPrepMinute,
+    prepBurden,
+    recommendation,
+    effectiveIngredientCost: ingredientCost,
+    costIncomplete: costInfo.incomplete,
+    costSource: costInfo.source,
+    recipeRows: costInfo.recipeRows,
+  };
 }
 
 export function getMenuRecommendation(metrics) {
@@ -37,12 +122,13 @@ export function getMenuRecommendation(metrics) {
   return 'Keep';
 }
 
-export function getMenuAnalytics(menuItems) {
-  const rows = menuItems.map((item) => ({ ...item, ...getMenuMetrics(item) }));
+export function getMenuAnalytics(menuItems, recipeIngredients = [], supplierItems = []) {
+  const rows = menuItems.map((item) => ({ ...item, ...getMenuMetrics(item, recipeIngredients, supplierItems) }));
   return {
     rows,
     weeklyGrossProfit: rows.reduce((sum, item) => sum + item.weeklyGrossProfit, 0),
     actionCount: rows.filter((item) => item.recommendation !== 'Keep').length,
+    incompleteRecipeCount: rows.filter((item) => item.costIncomplete).length,
   };
 }
 
@@ -88,7 +174,7 @@ export function getSupplierAnalytics(items) {
       return { ingredientName, unitMismatch: true, message: 'unit mismatch; compare manually', rows };
     }
 
-    const sorted = [...rows].sort((a, b) => Number(a.price) - Number(b.price));
+    const sorted = [...rows].sort((a, b) => safeNumber(a.price) - safeNumber(b.price));
     const cheapest = sorted[0];
     const mostExpensive = sorted[sorted.length - 1];
     return {
@@ -97,7 +183,7 @@ export function getSupplierAnalytics(items) {
       unit: units[0],
       cheapest,
       alternatives: sorted.slice(1),
-      savings: Number(mostExpensive.price) - Number(cheapest.price),
+      savings: safeNumber(mostExpensive.price) - safeNumber(cheapest.price),
       rows: sorted,
     };
   });

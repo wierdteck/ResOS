@@ -5,6 +5,7 @@ import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import MetricCard from '../components/MetricCard.jsx';
+import NumericInput from '../components/NumericInput.jsx';
 import { getSafetyTasks, saveSafetyTasks } from '../services/dataStore.js';
 import { chartRowsFromCounts, countBy, getSafetyAnalytics, isUnsafeTemperature } from '../utils/analytics.js';
 import { generateSafetyPlan } from '../utils/mockAi.js';
@@ -71,7 +72,7 @@ export default function Safety() {
                   <label>Assigned To<input value={task.assignedTo} onChange={(event) => update(task.id, 'assignedTo', event.target.value)} /></label>
                   <label>Status<select value={task.status} onChange={(event) => update(task.id, 'status', event.target.value)}>{statusOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
                   <label>Next Due<input type="date" value={task.nextDue} onChange={(event) => update(task.id, 'nextDue', event.target.value)} /></label>
-                  <label>Temp F<input disabled={!task.requiresTemperatureLog} type="number" value={task.temperatureValue ?? ''} onChange={(event) => update(task.id, 'temperatureValue', Number(event.target.value))} /></label>
+                  <label>Temp F<NumericInput disabled={!task.requiresTemperatureLog} value={task.temperatureValue ?? 0} onCommit={(value) => update(task.id, 'temperatureValue', value)} /></label>
                   <label>Notes<input value={task.notes} onChange={(event) => update(task.id, 'notes', event.target.value)} /></label>
                 </div>
                 <Button variant="ghost" icon={CheckCircle2} onClick={() => markDone(task.id)}>Mark Done</Button>

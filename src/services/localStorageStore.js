@@ -16,12 +16,28 @@ function readData() {
   }
 
   try {
-    return { ...cloneInitialData(), ...JSON.parse(stored) };
+    return normalizeData({ ...cloneInitialData(), ...JSON.parse(stored) });
   } catch {
     const seed = cloneInitialData();
     writeData(seed);
     return seed;
   }
+}
+
+function normalizeData(data) {
+  const seed = cloneInitialData();
+  return {
+    ...seed,
+    ...data,
+    menuItems: (data.menuItems || seed.menuItems).map((item) => {
+      const seededItem = seed.menuItems.find((seedItem) => seedItem.id === item.id);
+      return {
+        ...item,
+        costMode: item.costMode || seededItem?.costMode || 'manual',
+      };
+    }),
+    recipeIngredients: data.recipeIngredients || seed.recipeIngredients || [],
+  };
 }
 
 function writeData(data) {

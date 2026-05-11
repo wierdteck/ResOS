@@ -1,3 +1,5 @@
+import NumericInput from './NumericInput.jsx';
+
 export default function EditableTable({ columns, rows, getRowClassName, onChange, onRemove }) {
   return (
     <div className="table-wrap">
@@ -15,13 +17,17 @@ export default function EditableTable({ columns, rows, getRowClassName, onChange
             <tr key={row.id} className={getRowClassName ? getRowClassName(row) : ''}>
               {columns.map((column) => (
                 <td key={column.key}>
-                  {column.render ? column.render(row) : (
-                    <input
-                      type={column.type || 'text'}
+                  {column.render ? column.render(row) : column.type === 'number' ? (
+                    <NumericInput
                       min={column.min}
                       step={column.step}
+                      value={row[column.key] ?? 0}
+                      onCommit={(value) => onChange(row.id, column.key, value)}
+                    />
+                  ) : (
+                    <input
                       value={row[column.key] ?? ''}
-                      onChange={(event) => onChange(row.id, column.key, column.type === 'number' ? Number(event.target.value) : event.target.value)}
+                      onChange={(event) => onChange(row.id, column.key, event.target.value)}
                     />
                   )}
                 </td>

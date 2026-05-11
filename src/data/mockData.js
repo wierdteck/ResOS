@@ -8,11 +8,20 @@ export const initialData = {
     weeklySalesGoal: 18500,
   },
   menuItems: [
-    { id: 'menu-1', name: 'Smash Burger', category: 'Entree', price: 15.5, ingredientCost: 5.2, avgPrepMinutes: 9, salesThisWeek: 92, station: 'Grill', notes: 'Best lunch mover, watch beef costs.' },
-    { id: 'menu-2', name: 'Chicken Caesar Salad', category: 'Salad', price: 14, ingredientCost: 4.9, avgPrepMinutes: 7, salesThisWeek: 68, station: 'Cold Line', notes: 'Reliable margin, strong weekday lunch.' },
-    { id: 'menu-3', name: 'Truffle Fries', category: 'Side', price: 9, ingredientCost: 1.85, avgPrepMinutes: 6, salesThisWeek: 41, station: 'Fryer', notes: 'High margin, could bundle with burgers.' },
-    { id: 'menu-4', name: 'Iced Lavender Latte', category: 'Beverage', price: 6.75, ingredientCost: 1.15, avgPrepMinutes: 4, salesThisWeek: 38, station: 'Barista', notes: 'Promote on warm afternoons.' },
-    { id: 'menu-5', name: 'Salmon Rice Bowl', category: 'Entree', price: 18.5, ingredientCost: 8.25, avgPrepMinutes: 13, salesThisWeek: 28, station: 'Saute', notes: 'Good reviews but slow prep and variable salmon cost.' },
+    { id: 'menu-1', name: 'Smash Burger', category: 'Entree', price: 15.5, ingredientCost: 5.2, costMode: 'recipe', avgPrepMinutes: 9, salesThisWeek: 92, station: 'Grill', notes: 'Best lunch mover, watch beef costs.' },
+    { id: 'menu-2', name: 'Chicken Caesar Salad', category: 'Salad', price: 14, ingredientCost: 4.9, costMode: 'recipe', avgPrepMinutes: 7, salesThisWeek: 68, station: 'Cold Line', notes: 'Reliable margin, strong weekday lunch.' },
+    { id: 'menu-3', name: 'Truffle Fries', category: 'Side', price: 9, ingredientCost: 1.85, costMode: 'recipe', avgPrepMinutes: 6, salesThisWeek: 41, station: 'Fryer', notes: 'High margin, could bundle with burgers.' },
+    { id: 'menu-4', name: 'Iced Lavender Latte', category: 'Beverage', price: 6.75, ingredientCost: 1.15, costMode: 'manual', avgPrepMinutes: 4, salesThisWeek: 38, station: 'Barista', notes: 'Promote on warm afternoons.' },
+    { id: 'menu-5', name: 'Salmon Rice Bowl', category: 'Entree', price: 18.5, ingredientCost: 8.25, costMode: 'recipe', avgPrepMinutes: 13, salesThisWeek: 28, station: 'Saute', notes: 'Good reviews but slow prep and variable salmon cost.' },
+  ],
+  recipeIngredients: [
+    { id: 'rec-1', menuItemId: 'menu-1', ingredientName: 'ground beef', quantity: 0.33, unit: 'lb', costingMode: 'cheapest', notes: 'Burger patty.' },
+    { id: 'rec-2', menuItemId: 'menu-1', ingredientName: 'potatoes', quantity: 0.12, unit: 'bag', costingMode: 'cheapest', notes: 'Side garnish allocation.' },
+    { id: 'rec-3', menuItemId: 'menu-2', ingredientName: 'chicken breast', quantity: 0.38, unit: 'lb', costingMode: 'specificSupplier', supplierItemId: 'sup-2', notes: 'Use Valley Foods for trim quality.' },
+    { id: 'rec-4', menuItemId: 'menu-2', ingredientName: 'romaine lettuce', quantity: 0.08, unit: 'case', costingMode: 'cheapest', notes: 'Salad base.' },
+    { id: 'rec-5', menuItemId: 'menu-3', ingredientName: 'potatoes', quantity: 0.09, unit: 'bag', costingMode: 'cheapest', notes: 'Fries portion.' },
+    { id: 'rec-6', menuItemId: 'menu-5', ingredientName: 'salmon', quantity: 0.42, unit: 'lb', costingMode: 'specificSupplier', supplierItemId: 'sup-9', notes: 'Keep quality stable.' },
+    { id: 'rec-7', menuItemId: 'menu-5', ingredientName: 'romaine lettuce', quantity: 2, unit: 'lb', costingMode: 'cheapest', notes: 'Intentional unit mismatch demo.' },
   ],
   complianceTasks: [
     { id: 'comp-1', title: 'Health permit renewal', category: 'Permit', owner: 'Maya', dueDate: '2026-05-16', recurrence: 'yearly', status: 'due_soon', riskLevel: 'high', notes: 'Renew through county portal.' },
@@ -47,6 +56,7 @@ export const initialData = {
     { id: 'sup-8', supplierName: 'Valley Foods', ingredientName: 'milk', price: 4.05, unit: 'gal', lastUpdated: '2026-05-06', reliabilityScore: 88, deliveryDays: 'Tue, Fri', notes: 'Cheaper, less flexible.' },
     { id: 'sup-9', supplierName: 'Valley Foods', ingredientName: 'salmon', price: 9.85, unit: 'lb', lastUpdated: '2026-05-07', reliabilityScore: 86, deliveryDays: 'Tue, Fri', notes: 'Use for rice bowl.' },
     { id: 'sup-10', supplierName: 'Sunrise Dairy', ingredientName: 'coffee beans', price: 62, unit: 'case', lastUpdated: '2026-05-04', reliabilityScore: 91, deliveryDays: 'Wed', notes: 'House blend.' },
+    { id: 'sup-11', supplierName: 'Restaurant Depot', ingredientName: 'potatoes', price: 0.48, unit: 'lb', lastUpdated: '2026-05-05', reliabilityScore: 83, deliveryDays: 'Mon, Thu', notes: 'Different unit for manual comparison.' },
   ],
   supplierPriceHistory: [
     { id: 'hist-1', supplierItemId: 'sup-1', supplierName: 'Restaurant Depot', ingredientName: 'chicken breast', price: 3.1, unit: 'lb', updatedAt: '2026-04-28', note: 'Previous weekly quote.' },

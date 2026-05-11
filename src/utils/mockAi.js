@@ -4,8 +4,8 @@ function sentenceList(items) {
   return items.filter(Boolean).join(' ');
 }
 
-export function analyzeMenu(menuItems) {
-  const { rows } = getMenuAnalytics(menuItems);
+export function analyzeMenu(menuItems, recipeIngredients = [], supplierItems = []) {
+  const { rows } = getMenuAnalytics(menuItems, recipeIngredients, supplierItems);
   const actions = rows.filter((item) => item.recommendation !== 'Keep');
   const topProfit = [...rows].sort((a, b) => b.weeklyGrossProfit - a.weeklyGrossProfit)[0];
   const bestMargin = [...rows].sort((a, b) => b.profitPerPrepMinute - a.profitPerPrepMinute)[0];
@@ -13,6 +13,9 @@ export function analyzeMenu(menuItems) {
   return sentenceList([
     `${topProfit.name} is carrying the week with ${currency(topProfit.weeklyGrossProfit)} in gross profit.`,
     `${bestMargin.name} has the strongest profit per prep minute, so it is a good candidate for specials or staff suggestions.`,
+    rows.some((item) => item.costIncomplete)
+      ? `Recipe costing needs attention for ${rows.filter((item) => item.costIncomplete).map((item) => item.name).join(', ')}.`
+      : 'Recipe-linked supplier costs are complete for auto-costed dishes.',
     actions.length
       ? `Action items: ${actions.map((item) => `${item.name}: ${item.recommendation}`).join('; ')}.`
       : 'The current menu mix is balanced; keep watching ingredient costs and prep bottlenecks.',
@@ -79,7 +82,7 @@ export function generateProfileUpdatePlan(mismatches) {
 }
 
 export function generateOverallActionPlan(allData) {
-  const menu = getMenuAnalytics(allData.menuItems);
+  const menu = getMenuAnalytics(allData.menuItems, allData.recipeIngredients, allData.supplierItems);
   const compliance = getComplianceAnalytics(allData.complianceTasks);
   const safety = getSafetyAnalytics(allData.safetyTasks);
   const suppliers = getSupplierAnalytics(allData.supplierItems).filter((row) => !row.unitMismatch && row.savings > 0);
@@ -89,6 +92,7 @@ export function generateOverallActionPlan(allData) {
     compliance.highRiskOverdue ? `Resolve ${compliance.highRiskOverdue} high-risk overdue compliance task before the next service window.` : 'Compliance has no high-risk overdue blocker.',
     safety.unsafeTemperatures ? `Investigate ${safety.unsafeTemperatures} unsafe temperature log and document the correction.` : 'Temperature logs are currently within threshold.',
     menu.actionCount ? `Review ${menu.actionCount} menu item recommendation before ordering ingredients.` : 'Menu mix is healthy this week.',
+    menu.incompleteRecipeCount ? `${menu.incompleteRecipeCount} recipe-linked item has incomplete supplier costing.` : 'Recipe-linked supplier changes are flowing into menu margins.',
     suppliers.length ? `Check supplier savings for ${suppliers.map((row) => row.ingredientName).join(', ')}.` : 'No same-unit supplier switches need immediate review.',
     mismatches.length ? `Clean up ${mismatches.length} business profile mismatches in future official integrations.` : 'Business profiles are aligned with source of truth.',
   ];

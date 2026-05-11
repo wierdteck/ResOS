@@ -3,6 +3,7 @@ import { Plus, Sparkles, Trash2 } from 'lucide-react';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
+import NumericInput from '../components/NumericInput.jsx';
 import { getSupplierItems, getSupplierPriceHistory, saveSupplierItems, saveSupplierPriceHistory } from '../services/dataStore.js';
 import { currency, getSupplierAnalytics } from '../utils/analytics.js';
 import { suggestSupplierActions } from '../utils/mockAi.js';
@@ -58,6 +59,7 @@ export default function Suppliers() {
         </div>
       </div>
       <p className="muted">This is lightweight supplier cost tracking, not inventory management. ResOS compares exact unit matches only.</p>
+      <Card className="notice">Menu items using Auto From Recipe/Suppliers update automatically when supplier prices change.</Card>
       {actions ? <Card className="insight">{actions}</Card> : null}
       {showOptimize ? (
         <section className="supplier-grid">
@@ -84,9 +86,9 @@ export default function Suppliers() {
                 <tr key={item.id} className={selectedId === item.id ? 'selected-row' : ''} onClick={() => setSelectedId(item.id)}>
                   <td><input value={item.supplierName} onChange={(event) => update(item.id, 'supplierName', event.target.value)} /></td>
                   <td><input value={item.ingredientName} onChange={(event) => update(item.id, 'ingredientName', event.target.value)} /></td>
-                  <td><input type="number" step="0.01" value={item.price} onChange={(event) => update(item.id, 'price', Number(event.target.value))} /></td>
+                  <td><NumericInput value={item.price} step="0.01" onCommit={(value) => update(item.id, 'price', value)} /></td>
                   <td><select value={item.unit} onChange={(event) => update(item.id, 'unit', event.target.value)}>{units.map((unit) => <option key={unit}>{unit}</option>)}</select></td>
-                  <td><input type="number" value={item.reliabilityScore} onChange={(event) => update(item.id, 'reliabilityScore', Number(event.target.value))} /></td>
+                  <td><NumericInput value={item.reliabilityScore} min="0" max="100" onCommit={(value) => update(item.id, 'reliabilityScore', value)} /></td>
                   <td><input value={item.deliveryDays} onChange={(event) => update(item.id, 'deliveryDays', event.target.value)} /></td>
                   <td><input value={item.notes} onChange={(event) => update(item.id, 'notes', event.target.value)} /></td>
                   <td><button className="icon-only danger" type="button" onClick={() => removeItem(item.id)} aria-label="Remove supplier item"><Trash2 size={16} /></button></td>
@@ -101,7 +103,7 @@ export default function Suppliers() {
         <h3>Recent Price History</h3>
         {selectedHistory.length ? (
           <div className="history-list">
-            {selectedHistory.map((row) => <p key={row.id}><strong>{row.updatedAt}</strong> {row.supplierName} {row.ingredientName}: {currency(row.price)} / {row.unit} · {row.note}</p>)}
+            {selectedHistory.map((row) => <p key={row.id}><strong>{row.updatedAt}</strong> {row.supplierName} {row.ingredientName}: {currency(row.price)} / {row.unit} - {row.note}</p>)}
           </div>
         ) : <p className="muted">Select an item to inspect its updates.</p>}
       </Card>
