@@ -63,6 +63,7 @@ as $$
       'menuItems',
       'recipeIngredients',
       'complianceTasks',
+      'safetyTasks',
       'supplierItems',
       'supplierPriceHistory',
       'reviews',
@@ -73,6 +74,7 @@ as $$
       'menuItems',
       'recipeIngredients',
       'complianceTasks',
+      'safetyTasks',
       'supplierItems',
       'supplierPriceHistory',
       'reviews',
@@ -135,6 +137,21 @@ as $$
       'notes',
       'completedAt'
     ])
+    and jsonb_typeof(value->'safetyTasks') = 'array'
+    and public.jsonb_array_objects_have_only_keys(value->'safetyTasks', array[
+      'id',
+      'title',
+      'area',
+      'frequency',
+      'assignedTo',
+      'lastCompleted',
+      'nextDue',
+      'status',
+      'requiresTemperatureLog',
+      'temperatureType',
+      'temperatureValue',
+      'notes'
+    ])
     and jsonb_typeof(value->'supplierItems') = 'array'
     and public.jsonb_array_objects_have_only_keys(value->'supplierItems', array[
       'id',
@@ -173,9 +190,35 @@ as $$
     and jsonb_array_length(value->'menuItems') <= 500
     and jsonb_array_length(value->'recipeIngredients') <= 2500
     and jsonb_array_length(value->'complianceTasks') <= 1000
+    and jsonb_array_length(value->'safetyTasks') <= 1000
     and jsonb_array_length(value->'supplierItems') <= 1000
     and jsonb_array_length(value->'supplierPriceHistory') <= 5000
     and jsonb_array_length(value->'reviews') <= 5000;
+$$;
+
+create or replace function public.empty_resos_data(p_restaurant_name text default 'My Restaurant')
+returns jsonb
+language sql
+stable
+as $$
+  select jsonb_build_object(
+    'restaurantProfile', jsonb_build_object(
+      'restaurantName', coalesce(nullif(p_restaurant_name, ''), 'My Restaurant'),
+      'address', '',
+      'phone', '',
+      'cuisine', '',
+      'ownerName', '',
+      'weeklySalesGoal', ''
+    ),
+    'menuItems', '[]'::jsonb,
+    'recipeIngredients', '[]'::jsonb,
+    'complianceTasks', '[]'::jsonb,
+    'safetyTasks', '[]'::jsonb,
+    'supplierItems', '[]'::jsonb,
+    'supplierPriceHistory', '[]'::jsonb,
+    'reviews', '[]'::jsonb,
+    'businessProfiles', '{}'::jsonb
+  );
 $$;
 
 create table if not exists public.restaurant_workspaces (
@@ -292,45 +335,90 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   workspace_row public.restaurant_workspaces%rowtype;
   caller uuid := auth.uid();
+  user_workspace_slug text;
+  user_restaurant_name text;
+  starter_data jsonb;
 begin
   if caller is null then
     raise exception 'Authentication required' using errcode = '28000';
   end if;
 
-  if p_slug <> 'corner-table-cafe' then
-    raise exception 'Invalid workspace slug' using errcode = '22023';
+  user_workspace_slug := 'restaurant-' || replace(caller::text, '-', '');
+
+  user_restaurant_name :=
+    coalesce(
+      nullif(auth.jwt() -> 'user_metadata' ->> 'restaurant_name', ''),
+      nullif(auth.jwt() -> 'user_metadata' ->> 'full_name', ''),
+      'My Restaurant'
+    );
+
+  starter_data := public.normalize_resos_data(p_seed_data);
+
+  if not public.is_valid_resos_data(starter_data) then
+    starter_data := public.empty_resos_data(user_restaurant_name);
   end if;
 
-  if not public.is_valid_resos_data(p_seed_data) then
-    raise exception 'Invalid workspace payload' using errcode = '22023';
-  end if;
-
-  select rw.id, rw.slug, rw.restaurant_name, rw.data, rw.created_by, rw.created_at, rw.updated_at
+  select rw.*
   into workspace_row
-  from public.restaurant_workspaces rw
-  where rw.slug = p_slug;
+  from public.restaurant_workspaces as rw
+  where rw.slug = user_workspace_slug;
 
   if not found then
-    insert into public.restaurant_workspaces (slug, restaurant_name, data, created_by)
-    values (p_slug, p_seed_data->'restaurantProfile'->>'restaurantName', p_seed_data, caller)
+    insert into public.restaurant_workspaces (
+      slug,
+      restaurant_name,
+      data,
+      created_by
+    )
+    values (
+      user_workspace_slug,
+      coalesce(
+        nullif(starter_data -> 'restaurantProfile' ->> 'restaurantName', ''),
+        user_restaurant_name,
+        'My Restaurant'
+      ),
+      starter_data,
+      caller
+    )
     returning * into workspace_row;
-
-    insert into public.restaurant_workspace_members (workspace_id, user_id, role, created_by)
-    values (workspace_row.id, caller, 'admin', caller)
-    on conflict (workspace_id, user_id) do nothing;
+  else
+    if workspace_row.data ? 'safetyTasks' then
+      update public.restaurant_workspaces as rw
+      set data = public.normalize_resos_data(rw.data)
+      where rw.id = workspace_row.id
+      returning rw.* into workspace_row;
+    end if;
   end if;
 
-  if not public.current_user_can_access_workspace(workspace_row.id) then
-    raise exception 'Workspace access denied' using errcode = '42501';
-  end if;
+  insert into public.restaurant_workspace_members (
+    workspace_id,
+    user_id,
+    role,
+    created_by
+  )
+  values (
+    workspace_row.id,
+    caller,
+    'admin',
+    caller
+  )
+  on conflict (workspace_id, user_id)
+  do update set
+    role = 'admin',
+    updated_at = now();
 
   return query
-    select workspace_row.id, workspace_row.slug, workspace_row.restaurant_name, workspace_row.data, workspace_row.updated_at;
+    select
+      workspace_row.id,
+      workspace_row.slug,
+      workspace_row.restaurant_name,
+      public.normalize_resos_data(workspace_row.data),
+      workspace_row.updated_at;
 end;
 $$;
 
@@ -344,46 +432,92 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   workspace_row public.restaurant_workspaces%rowtype;
+  caller uuid := auth.uid();
+  user_workspace_slug text;
+  clean_data jsonb;
 begin
-  if auth.uid() is null then
+  if caller is null then
     raise exception 'Authentication required' using errcode = '28000';
   end if;
 
-  if p_slug <> 'corner-table-cafe' then
-    raise exception 'Invalid workspace slug' using errcode = '22023';
-  end if;
+  clean_data := public.normalize_resos_data(p_data);
 
-  if not public.is_valid_resos_data(p_data) then
+  if not public.is_valid_resos_data(clean_data) then
     raise exception 'Invalid workspace payload' using errcode = '22023';
   end if;
 
-  select rw.id, rw.slug, rw.restaurant_name, rw.data, rw.created_by, rw.created_at, rw.updated_at
+  user_workspace_slug := 'restaurant-' || replace(caller::text, '-', '');
+
+  select rw.*
   into workspace_row
-  from public.restaurant_workspaces rw
-  where rw.slug = p_slug;
+  from public.restaurant_workspaces as rw
+  where rw.slug = user_workspace_slug;
 
   if not found then
-    raise exception 'Workspace not found' using errcode = '02000';
+    insert into public.restaurant_workspaces (
+      slug,
+      restaurant_name,
+      data,
+      created_by
+    )
+    values (
+      user_workspace_slug,
+      coalesce(nullif(clean_data -> 'restaurantProfile' ->> 'restaurantName', ''), 'My Restaurant'),
+      clean_data,
+      caller
+    )
+    returning * into workspace_row;
+
+    insert into public.restaurant_workspace_members (
+      workspace_id,
+      user_id,
+      role,
+      created_by
+    )
+    values (
+      workspace_row.id,
+      caller,
+      'admin',
+      caller
+    )
+    on conflict (workspace_id, user_id)
+    do update set role = 'admin', updated_at = now();
   end if;
 
   if not public.current_user_can_edit_workspace(workspace_row.id) then
     raise exception 'Workspace edit denied' using errcode = '42501';
   end if;
 
-  update public.restaurant_workspaces
-  set restaurant_name = p_data->'restaurantProfile'->>'restaurantName',
-      data = p_data
-  where public.restaurant_workspaces.id = workspace_row.id
-  returning * into workspace_row;
+  update public.restaurant_workspaces as rw
+  set
+    restaurant_name = coalesce(
+      nullif(clean_data -> 'restaurantProfile' ->> 'restaurantName', ''),
+      workspace_row.restaurant_name
+    ),
+    data = clean_data
+  where rw.id = workspace_row.id
+  returning rw.* into workspace_row;
 
   return query
-    select workspace_row.id, workspace_row.slug, workspace_row.restaurant_name, workspace_row.data, workspace_row.updated_at;
+    select
+      workspace_row.id,
+      workspace_row.slug,
+      workspace_row.restaurant_name,
+      public.normalize_resos_data(workspace_row.data),
+      workspace_row.updated_at;
 end;
 $$;
+
+notify pgrst, 'reload schema';
+
+grant execute on function public.ensure_restaurant_workspace(text, jsonb) to authenticated;
+grant execute on function public.save_restaurant_workspace_data(text, jsonb) to authenticated;
+
+notify pgrst, 'reload schema';
 
 create or replace function public.add_restaurant_workspace_member(
   p_slug text,
@@ -393,7 +527,7 @@ create or replace function public.add_restaurant_workspace_member(
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   workspace_id uuid;
@@ -402,9 +536,10 @@ begin
     raise exception 'Authentication required' using errcode = '28000';
   end if;
 
-  select id into workspace_id
-  from public.restaurant_workspaces
-  where slug = p_slug;
+  select rw.id
+  into workspace_id
+  from public.restaurant_workspaces as rw
+  where rw.slug = p_slug;
 
   if workspace_id is null then
     raise exception 'Workspace not found' using errcode = '02000';
@@ -414,12 +549,111 @@ begin
     raise exception 'Admin role required' using errcode = '42501';
   end if;
 
-  insert into public.restaurant_workspace_members (workspace_id, user_id, role, created_by)
-  values (workspace_id, p_user_id, p_role, auth.uid())
+  insert into public.restaurant_workspace_members (
+    workspace_id,
+    user_id,
+    role,
+    created_by
+  )
+  values (
+    workspace_id,
+    p_user_id,
+    p_role,
+    auth.uid()
+  )
   on conflict (workspace_id, user_id)
-  do update set role = excluded.role, updated_at = now();
+  do update set
+    role = excluded.role,
+    updated_at = now();
 end;
 $$;
+
+create or replace function public.auto_create_workspace_for_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  new_workspace_id uuid;
+  new_workspace_slug text;
+  new_restaurant_name text;
+  starter_data jsonb;
+begin
+  new_workspace_slug := 'restaurant-' || replace(new.id::text, '-', '');
+
+  new_restaurant_name :=
+    coalesce(
+      nullif(new.raw_user_meta_data ->> 'restaurant_name', ''),
+      nullif(new.raw_user_meta_data ->> 'full_name', ''),
+      split_part(new.email, '@', 1) || '''s Restaurant',
+      'My Restaurant'
+    );
+
+  -- Try to copy the old Corner Table data as a starter template.
+  select rw.data
+  into starter_data
+  from public.restaurant_workspaces as rw
+  where rw.slug = 'corner-table-cafe'
+    and public.is_valid_resos_data(rw.data)
+  limit 1;
+
+  starter_data := coalesce(
+    starter_data,
+    public.empty_resos_data(new_restaurant_name)
+  );
+
+  insert into public.restaurant_workspaces (
+    slug,
+    restaurant_name,
+    data,
+    created_by
+  )
+  values (
+    new_workspace_slug,
+    new_restaurant_name,
+    starter_data,
+    new.id
+  )
+  on conflict (slug)
+  do update set
+    restaurant_name = excluded.restaurant_name,
+    updated_at = now()
+  returning id into new_workspace_id;
+
+  insert into public.restaurant_workspace_members (
+    workspace_id,
+    user_id,
+    role,
+    created_by
+  )
+  values (
+    new_workspace_id,
+    new.id,
+    'admin',
+    new.id
+  )
+  on conflict (workspace_id, user_id)
+  do update set
+    role = 'admin',
+    updated_at = now();
+
+  return new;
+end;
+$$;
+
+drop trigger if exists auto_add_new_user_to_corner_table
+on auth.users;
+
+drop trigger if exists auto_create_workspace_for_new_user
+on auth.users;
+
+create trigger auto_create_workspace_for_new_user
+after insert on auth.users
+for each row
+execute function public.auto_create_workspace_for_new_user();
+
+drop function if exists public.auto_add_new_user_to_corner_table();
 
 grant execute on function public.ensure_restaurant_workspace(text, jsonb) to authenticated;
 grant execute on function public.save_restaurant_workspace_data(text, jsonb) to authenticated;

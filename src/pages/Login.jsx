@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, KeyRound, Mail } from 'lucide-react';
+import { ArrowRight, KeyRound, Mail, UserPlus } from 'lucide-react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { publicAuthError, useAuth } from '../auth/AuthProvider.jsx';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
+
 
 export default function Login() {
   const navigate = useNavigate();
@@ -144,6 +145,12 @@ export default function Login() {
         >
           {mode === 'reset' ? 'Back to sign in' : 'Forgot password?'}
         </button>
+
+        {mode === 'login' ? (
+          <Button to="/signup" icon={UserPlus} variant="secondary">
+            Create Account
+          </Button>
+        ) : null}
 
         <p style={{ fontSize: '0.75rem', color: '#999', marginTop: '1.5rem', textAlign: 'center' }}>
           Demo credentials: <strong>demo@demo.demo</strong> / <strong>demo</strong>

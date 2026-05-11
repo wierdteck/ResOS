@@ -55,6 +55,22 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   }, []);
 
+  const signUp = useCallback(async (email, password) => {
+    if (!supabase) {
+      throw new Error(CONFIG_ERROR);
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  }, []);
+
   const sendPasswordReset = useCallback(async (email) => {
     if (!supabase) {
       throw new Error(CONFIG_ERROR);
@@ -89,10 +105,11 @@ export function AuthProvider({ children }) {
     sendPasswordReset,
     session,
     signIn,
+    signUp,
     signOut,
     updatePassword,
     user: session?.user || null,
-  }), [authError, isLoading, sendPasswordReset, session, signIn, signOut, updatePassword]);
+  }), [authError, isLoading, sendPasswordReset, session, signIn, signOut, signUp, updatePassword]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

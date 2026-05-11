@@ -12,7 +12,10 @@ export default function Landing() {
           <p>
             ResOS helps small teams turn paper checklists, scattered spreadsheets, and manager memory into one calm place for daily decisions.
           </p>
-          <Button to="/dashboard" icon={ArrowRight}>Open Dashboard</Button>
+          <div className="button-row">
+            <Button to="/signup" icon={ArrowRight}>Sign Up</Button>
+            <Button to="/dashboard" variant="secondary">Open Dashboard</Button>
+          </div>
         </div>
         <div className="hero-panel" aria-hidden="true">
           <div className="mini-chart">

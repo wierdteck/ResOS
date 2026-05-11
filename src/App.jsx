@@ -5,6 +5,7 @@ import { ResosDataProvider } from './services/ResosDataProvider.jsx';
 import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
+import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Menu from './pages/Menu.jsx';
 import Compliance from './pages/Compliance.jsx';
@@ -16,6 +17,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/dashboard"
